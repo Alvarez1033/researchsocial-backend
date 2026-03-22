@@ -60,6 +60,29 @@ router.get('/', optionalAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/users/me/notifications
+router.get('/me/notifications', requireAuth, async (req, res, next) => {
+  try {
+    const { unread_only } = req.query;
+    let where = 'WHERE n.user_id = $1';
+    if (unread_only === 'true') where += ' AND n.is_read = false';
+
+    const result = await query(`
+      SELECT n.*, u.handle as actor_handle, u.avatar_url as actor_avatar, u.color as actor_color, u.initials as actor_initials
+      FROM notifications n
+      LEFT JOIN users u ON u.id = n.actor_id
+      ${where}
+      ORDER BY n.created_at DESC LIMIT 50
+    `, [req.user.id]);
+
+    res.json(result.rows);
+  } catch (err) { next(err); }
+});
+// POST /api/users/me/notifications/read
+router.post('/me/notifications/read', requireAuth, async (req, res, next) => {
+  try {
+    await query('UPDATE notifications SET is_read = true WHERE user_id = $1', [req.user.id]);
+    res.json({ ok: true });
 // GET /api/users/:handle
 router.get('/:handle', optionalAuth, async (req, res, next) => {
   try {
@@ -225,30 +248,7 @@ router.post('/:handle/collab', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/users/me/notifications
-router.get('/me/notifications', requireAuth, async (req, res, next) => {
-  try {
-    const { unread_only } = req.query;
-    let where = 'WHERE n.user_id = $1';
-    if (unread_only === 'true') where += ' AND n.is_read = false';
 
-    const result = await query(`
-      SELECT n.*, u.handle as actor_handle, u.avatar_url as actor_avatar, u.color as actor_color, u.initials as actor_initials
-      FROM notifications n
-      LEFT JOIN users u ON u.id = n.actor_id
-      ${where}
-      ORDER BY n.created_at DESC LIMIT 50
-    `, [req.user.id]);
-
-    res.json(result.rows);
-  } catch (err) { next(err); }
-});
-
-// POST /api/users/me/notifications/read
-router.post('/me/notifications/read', requireAuth, async (req, res, next) => {
-  try {
-    await query('UPDATE notifications SET is_read = true WHERE user_id = $1', [req.user.id]);
-    res.json({ ok: true });
   } catch (err) { next(err); }
 });
 
