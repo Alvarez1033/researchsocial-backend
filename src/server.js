@@ -80,7 +80,7 @@ app.use((err, req, res, next) => {
 require('./socket')(io);
 
 // ─── Start ──────────────────────────────────────────────────────────────────────
-const PORT = parseInt(process.env.PORT) || 4000;
+const PORT = parseInt(process.env.PORT) || 3000;
 server.listen(PORT, () => {
   console.log('\n🚀 ResearchSocial server running!');
   console.log(`   App:    http://localhost:${PORT}`);
