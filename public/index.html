@@ -213,8 +213,23 @@ h1,h2,h3,h4{text-wrap:balance;line-height:1.2;}
     <button class="btn-icon" data-theme-toggle title="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     <!-- Auth -->
     <button class="btn-signin" id="signinBtn" onclick="openAuth()">Sign In</button>
-    <div class="nav-user-pill" id="navPill" style="display:none;" onclick="goProfile()">
-      <div id="navAvatar"></div><span id="navHandle"></span>
+    <div style="display:none;position:relative;" id="navPill">
+      <div class="nav-user-pill" onclick="toggleUserMenu()">
+        <div id="navAvatar"></div><span id="navHandle"></span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div id="userMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh-md);min-width:160px;overflow:hidden;z-index:200;">
+        <button onclick="goProfile()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;transition:background var(--tr);" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
+          👤 My Profile
+        </button>
+        <button onclick="goToMessages()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;transition:background var(--tr);" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
+          ✉️ Messages
+        </button>
+        <div style="height:1px;background:var(--div);margin:4px 0;"></div>
+        <button onclick="doLogout()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;color:var(--err);transition:background var(--tr);" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
+          🚪 Sign Out
+        </button>
+      </div>
     </div>
   </div>
 </nav>
@@ -378,7 +393,7 @@ function updateNav() {
   const ctaAvatar = document.getElementById('ctaAvatar');
   if (user) {
     btn.style.display = 'none';
-    pill.style.display = 'flex';
+    pill.style.display = 'block';
     document.getElementById('navAvatar').innerHTML = avatarSVG(user, 24);
     document.getElementById('navHandle').textContent = '@' + user.handle;
     ctaAvatar.innerHTML = avatarSVG(user, 36);
@@ -388,6 +403,24 @@ function updateNav() {
     ctaAvatar.innerHTML = `<svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="18" fill="var(--pri)"/><circle cx="18" cy="14" r="5" fill="white" opacity=".9"/><path d="M8 30c0-5.523 4.477-10 10-10s10 4.477 10 10" fill="white" opacity=".7"/></svg>`;
   }
 }
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function goToMessages() { window.location.href = '/messages'; }
+async function doLogout() {
+  await API.logout();
+  document.getElementById('userMenu').style.display = 'none';
+  updateNav();
+  loadFeed(1);
+  showToast('👋 Signed out');
+}
+// Close user menu when clicking outside
+document.addEventListener('click', e => {
+  const pill = document.getElementById('navPill');
+  const menu = document.getElementById('userMenu');
+  if (pill && menu && !pill.contains(e.target)) menu.style.display = 'none';
+});
 function goProfile() { const u=Auth.getUser(); if(u) window.location.href=profileURL(u.handle); }
 document.addEventListener('click', e => { const w=document.getElementById('notifWrap'); if(w&&!w.contains(e.target)) document.getElementById('notifDropdown').classList.remove('open'); });
 
