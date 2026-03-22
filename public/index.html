@@ -182,6 +182,45 @@ h1,h2,h3,h4{text-wrap:balance;line-height:1.2;}
 /* Responsive */
 @media(max-width:1100px){.page-wrap{grid-template-columns:200px 1fr;grid-template-areas:"nav nav" "sidebar main";}.aside-panel{display:none;}}
 @media(max-width:768px){.page-wrap{grid-template-columns:1fr;grid-template-areas:"nav" "main";padding:0;}.sidebar{display:none;}.main-feed{padding:var(--s4);}.navbar{padding:var(--s3) var(--s4);}.nav-search{display:none;}.post-card{padding:var(--s4);}}
+
+/* ── Post Composer ── */
+.type-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.type-chip{padding:6px 14px;border-radius:var(--r-full);font-size:var(--text-sm);font-weight:600;border:1.5px solid var(--bdr);color:var(--muted);cursor:pointer;transition:all var(--tr);}
+.type-chip:hover{border-color:var(--pri);color:var(--pri);}
+.type-chip.active{background:var(--pri);color:var(--inv);border-color:var(--pri);}
+[data-theme="dark"] .type-chip.active{color:#0d1117;}
+.template-desc{font-size:var(--text-sm);color:var(--muted);padding:10px 14px;background:var(--off);border-radius:var(--r-lg);margin-bottom:16px;line-height:1.5;}
+.post-field-group{margin-bottom:14px;}
+.post-field-label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.post-field-input{width:100%;padding:9px 12px;background:var(--off);border:1.5px solid var(--bdr);border-radius:var(--r-md);font-size:var(--text-sm);color:var(--text);transition:all var(--tr);resize:vertical;line-height:1.55;}
+.post-field-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-hl);}
+.att-picker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.att-pick-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px dashed var(--bdr);border-radius:var(--r-lg);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all var(--tr);}
+.att-pick-btn:hover{border-color:var(--pri);color:var(--pri);}
+.att-preview-item{background:var(--off);border:1px solid var(--div);border-radius:var(--r-lg);padding:10px;margin-bottom:8px;}
+.att-link-preview{display:flex;align-items:center;gap:8px;color:var(--pri);}
+
+/* ── Structured post body ── */
+.structured-body{display:flex;flex-direction:column;gap:0;margin:var(--s3) 0 var(--s4);}
+.structured-section{padding:10px 14px;border-left:3px solid var(--pri);margin-bottom:8px;background:var(--off);border-radius:0 var(--r-md) var(--r-md) 0;}
+.structured-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px;}
+.structured-value{font-size:var(--text-sm);color:var(--text);line-height:1.6;}
+.structured-body-free{font-size:var(--text-sm);color:var(--text);line-height:1.7;margin:var(--s3) 0 var(--s4);white-space:pre-wrap;}
+.show-more-btn{font-size:12px;color:var(--pri);font-weight:600;cursor:pointer;margin-top:6px;display:inline-block;}
+
+/* ── Post attachments ── */
+.post-attachments{margin-top:var(--s4);}
+.attachment-wrap{position:relative;border-radius:var(--r-lg);overflow:hidden;margin-bottom:8px;}
+.attachment-img{width:100%;max-height:320px;object-fit:contain;border-radius:var(--r-lg);background:var(--off);}
+.attachment-pending-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-lg);}
+.attachment-pending-label{font-size:12px;font-weight:700;color:white;background:rgba(0,0,0,.6);padding:4px 12px;border-radius:var(--r-full);}
+.att-mod-btns{display:flex;gap:6px;margin-top:6px;}
+.att-mod-btn{padding:4px 12px;border-radius:var(--r-full);font-size:11px;font-weight:700;cursor:pointer;transition:all var(--tr);}
+.att-approve-btn{background:var(--suc);color:#0d2b0d;}
+.att-reject-btn{background:var(--err);color:white;}
+.attachment-link-card{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--off);border:1px solid var(--div);border-radius:var(--r-lg);}
+.att-rejected-badge{font-size:11px;color:var(--err);font-weight:600;padding:3px 10px;background:#450a0a;border-radius:var(--r-full);}
+
 </style>
 </head>
 <body>
@@ -336,21 +375,72 @@ h1,h2,h3,h4{text-wrap:balance;line-height:1.2;}
   </div>
 </div>
 
-<!-- NEW POST MODAL -->
-<div class="modal-overlay" id="newPostModal">
-  <div class="modal" style="max-width:600px;">
-    <div class="modal-hdr"><h2 class="modal-title">New Post</h2><button class="modal-close" onclick="closeModal('newPostModal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+<!-- POST COMPOSER MODAL -->
+<div class="modal-overlay" id="postComposerModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-hdr">
+      <h2 class="modal-title">New Post</h2>
+      <button class="modal-close" onclick="closeComposer()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
     <div class="modal-body">
+      <!-- Type selector -->
       <div class="form-group">
         <label class="form-label">Post Type</label>
-        <select class="form-select" id="newPostType"><option value="proposal">Proposal</option><option value="study">Study</option><option value="findings">Findings</option><option value="review">Review</option><option value="discussion">Discussion</option></select>
+        <div class="type-chips" id="typeChips">
+          <button class="type-chip" data-type="discussion" onclick="selectPostType('discussion',this)">💬 Discussion</button>
+          <button class="type-chip" data-type="proposal" onclick="selectPostType('proposal',this)">🔬 Proposal</button>
+          <button class="type-chip" data-type="study" onclick="selectPostType('study',this)">🧪 Study</button>
+          <button class="type-chip" data-type="findings" onclick="selectPostType('findings',this)">📊 Findings</button>
+          <button class="type-chip" data-type="review" onclick="selectPostType('review',this)">📋 Review</button>
+        </div>
+        <div class="template-desc" id="templateDesc"></div>
       </div>
-      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="newPostTitle" placeholder="A clear, descriptive title…"></div>
-      <div class="form-group"><label class="form-label">Summary</label><textarea class="form-textarea" id="newPostExcerpt" placeholder="Brief description of your research…" style="min-height:100px;"></textarea></div>
-      <div class="form-group"><label class="form-label">Tags <span style="font-weight:400;color:var(--muted)">(comma separated)</span></label><input class="form-input" id="newPostTags" placeholder="e.g. sleep, cognition, EEG"></div>
-      <div id="newPostError" style="color:var(--err);font-size:var(--text-xs);display:none;margin-bottom:var(--s3);"></div>
+
+      <!-- Title + summary (always shown) -->
+      <div class="form-group">
+        <label class="form-label">Title <span style="color:var(--err)">*</span></label>
+        <input class="form-input" id="composerTitle" type="text" placeholder="A clear, descriptive title…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Summary <span style="color:var(--err)">*</span></label>
+        <textarea class="form-textarea" id="composerExcerpt" placeholder="A 1-3 sentence summary visible in the feed…" style="min-height:80px;"></textarea>
+      </div>
+
+      <!-- Structured template fields -->
+      <div id="templateFieldsWrap"></div>
+
+      <!-- Tags -->
+      <div class="form-group">
+        <label class="form-label">Tags <span style="font-weight:400;color:var(--muted);font-size:11px;">(comma separated)</span></label>
+        <input class="form-input" id="composerTags" type="text" placeholder="#sleep, #cognition, #EEG">
+      </div>
+
+      <!-- Attachments -->
+      <div class="form-group">
+        <label class="form-label">Attachments <span style="font-size:11px;font-weight:400;color:var(--warn);">⏳ require staff approval</span></label>
+        <div class="att-picker">
+          <button class="att-pick-btn" onclick="openAttachmentPicker('image')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Add Image
+          </button>
+          <button class="att-pick-btn" onclick="openAttachmentPicker('chart')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Add Chart / Figure
+          </button>
+          <button class="att-pick-btn" onclick="openAttachmentPicker('link')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Add Link
+          </button>
+        </div>
+        <div id="attachmentList"></div>
+      </div>
+
+      <div id="composerError" style="color:var(--err);font-size:12px;padding:8px 12px;background:#450a0a;border-radius:var(--r-md);display:none;margin-top:8px;"></div>
     </div>
-    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('newPostModal')">Cancel</button><button class="btn-primary" onclick="submitPost()">Publish Post</button></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeComposer()">Cancel</button>
+      <button class="btn-primary" id="composerSubmitBtn" onclick="submitNewPost()">Publish Post</button>
+    </div>
   </div>
 </div>
 
@@ -387,6 +477,8 @@ h1,h2,h3,h4{text-wrap:balance;line-height:1.2;}
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/api.js"></script>
+<script src="/js/post-templates.js"></script>
+<script src="/js/post-composer.js"></script>
 <script>
 // ─── Theme ────────────────────────────────────────────────────────────────────
 (function(){
@@ -481,8 +573,9 @@ async function loadFeed(page=1) {
       ? data.posts.map(renderPost).join('')
       : '<div style="text-align:center;padding:60px;color:var(--muted)">No posts yet. Be the first to share research!</div>';
     document.getElementById('feedContainer').innerHTML = page===1 ? html : (document.getElementById('feedContainer').innerHTML.replace(/<div[^>]*id="load-more"[^>]*>.*?<\/div>/s,'') + html);
-    // Update stats
     document.getElementById('stat-posts').textContent = fmtNum(data.total);
+    attachPostListeners();
+    setTimeout(() => loadAllAttachments(), 100);
   } catch (err) {
     document.getElementById('feedContainer').innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">Failed to load feed. Is the server running?<br><small>${esc(err.message)}</small></div>`;
   }
@@ -536,7 +629,14 @@ function renderPost(p) {
     <h2 class="post-title">${esc(p.title)}</h2>
     <p class="post-excerpt">${esc(p.excerpt)}</p>
     ${tags.length ? `<div class="post-tags">${tags.map(t=>`<span class="tag" style="background:${t.color||'var(--tag-bg)'}22;color:${t.color||'var(--tag-c)'}">#${esc(t.name)}</span>`).join('')}</div>` : ''}
-    <div class="post-footer">
+    ${p.structured_body && Object.keys(p.structured_body).length ? `
+  <div class="structured-preview" id="struct_${p.id}" style="max-height:200px;overflow:hidden;position:relative;">
+    ${renderStructuredBody ? renderStructuredBody(p.type, p.structured_body) : ''}
+    <div style="position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--surface));"></div>
+  </div>
+  <button class="show-more-btn" onclick="toggleStructured('${p.id}',this)">Show full details ↓</button>` : ''}
+  <div class="post-attachments" id="atts_${p.id}"></div>
+  <div class="post-footer">
       <div class="post-actions">
         <button class="action-btn like-btn ${p.liked?'liked':''}" data-id="${esc(p.id)}" data-liked="${p.liked?'1':'0'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="${p.liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -653,30 +753,7 @@ async function submitComment() {
 document.getElementById('commentInput').addEventListener('keydown', e => { if(e.key==='Enter') submitComment(); });
 
 // ─── New Post ─────────────────────────────────────────────────────────────────
-function openNewPost() {
-  if (!Auth.isLoggedIn()) { openAuth(); return; }
-  openModal('newPostModal');
-}
-async function submitPost() {
-  const title = document.getElementById('newPostTitle').value.trim();
-  const excerpt = document.getElementById('newPostExcerpt').value.trim();
-  const type = document.getElementById('newPostType').value;
-  const tagStr = document.getElementById('newPostTags').value;
-  const tags = tagStr.split(',').map(t=>t.trim().replace(/^#/,'')).filter(Boolean);
-  const errEl = document.getElementById('newPostError');
-  errEl.style.display = 'none';
-  if (!title || title.length < 5) { errEl.textContent='Title must be at least 5 characters.'; errEl.style.display='block'; return; }
-  if (!excerpt || excerpt.length < 10) { errEl.textContent='Summary must be at least 10 characters.'; errEl.style.display='block'; return; }
-  try {
-    await API.createPost({ title, excerpt, type, tags });
-    closeModal('newPostModal');
-    document.getElementById('newPostTitle').value='';
-    document.getElementById('newPostExcerpt').value='';
-    document.getElementById('newPostTags').value='';
-    loadFeed(1);
-    showToast('🎉 Post published!');
-  } catch(e) { errEl.textContent=e.message; errEl.style.display='block'; }
-}
+// openNewPost and submitNewPost are in post-composer.js
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 async function loadTags() {

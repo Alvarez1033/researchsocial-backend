@@ -34,7 +34,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
     const result = await query(`
       SELECT p.id, p.title, p.excerpt, p.type, p.status, p.thumbnail_type, p.thumbnail_url,
              p.likes_count, p.comments_count, p.views_count, p.is_pinned, p.is_featured,
-             p.created_at, p.updated_at,
+             p.structured_body, p.created_at, p.updated_at,
              u.id as author_id, u.handle as author_handle, u.name as author_name,
              u.avatar_url as author_avatar, u.color as author_color, u.initials as author_initials,
              u.affiliation as author_affiliation, u.is_verified as author_verified,
@@ -81,7 +81,7 @@ router.post('/', requireAuth, [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { title, excerpt, body: postBody, type, tags = [], thumbnail_type } = req.body;
+    const { title, excerpt, body: postBody, type, tags = [], thumbnail_type, structured_body } = req.body;
 
     // Check post approval setting
     const setting = await query("SELECT value FROM site_settings WHERE key = 'require_post_approval'");
@@ -93,10 +93,10 @@ router.post('/', requireAuth, [
       await client.query('BEGIN');
 
       const postRes = await client.query(`
-        INSERT INTO posts (author_id, title, excerpt, body, type, status, thumbnail_type)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO posts (author_id, title, excerpt, body, type, status, thumbnail_type, structured_body)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
-      `, [req.user.id, title, excerpt, postBody || null, type, status, thumbnail_type || 'none']);
+      `, [req.user.id, title, excerpt, postBody || null, type, status, thumbnail_type || 'none', JSON.stringify(structured_body || {})]);
 
       const post = postRes.rows[0];
 

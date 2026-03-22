@@ -236,6 +236,11 @@ canvas{max-height:220px;}
     Pending Posts
     <span class="badge" id="pendingBadge" style="display:none"></span>
   </button>
+  <button class="nav-link" data-page="attachments" onclick="nav('attachments',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    Attachments
+    <span class="badge" id="attBadge" style="display:none"></span>
+  </button>
   <button class="nav-link" data-page="posts" onclick="nav('posts',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
     All Posts
@@ -404,6 +409,12 @@ canvas{max-height:220px;}
       <table><thead><tr><th>Tag</th><th>Category</th><th>Posts</th><th>Featured</th><th>Actions</th></tr></thead>
       <tbody id="tagsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:40px">Loading…</td></tr></tbody></table>
     </div>
+  </div>
+
+  <!-- ── ATTACHMENTS ── -->
+  <div id="page-attachments" class="page">
+    <h1 class="page-title">Attachment Review</h1>
+    <div id="attachmentReviewList"><div style="text-align:center;padding:40px;color:var(--muted)">Loading…</div></div>
   </div>
 
   <!-- ── SETTINGS ── -->
@@ -599,6 +610,7 @@ function nav(page, btn) {
     case 'tags': loadTags(); break;
     case 'settings': loadSettings(); break;
     case 'adminchat': loadAdminChat(); break;
+    case 'attachments': loadAttachments(); break;
   }
 }
 
@@ -1013,6 +1025,62 @@ function showToast(msg, isError) {
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
+async function loadAttachments() {
+  try {
+    const atts = await api('GET', '/attachments/pending/all');
+    const badge = document.getElementById('attBadge');
+    if (atts.length) { badge.textContent = atts.length; badge.style.display = 'flex'; }
+    else badge.style.display = 'none';
+
+    const el = document.getElementById('attachmentReviewList');
+    if (!atts.length) {
+      el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted)">🎉 No pending attachments!</div>';
+      return;
+    }
+    el.innerHTML = atts.map(att => `
+      <div class="card" style="margin-bottom:12px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+          <!-- Preview -->
+          <div style="flex-shrink:0;">
+            ${att.type === 'link'
+              ? `<div style="width:120px;height:80px;background:var(--surface3);border-radius:var(--r-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);">
+                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/></svg>
+                   <span style="font-size:10px;color:var(--muted)">Link</span>
+                 </div>`
+              : `<img src="${att.url}" style="width:120px;height:80px;object-fit:cover;border-radius:var(--r-lg);border:1px solid var(--border);" onerror="this.src='';">`
+            }
+          </div>
+          <!-- Info -->
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px;">
+              <span class="badge badge-info">${att.type}</span>
+              Post: <span style="color:var(--primary)">${fmtDate(att.created_at)}</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">
+              By: @${esc(att.uploader_handle)} · Post: "${esc((att.post_title||'').slice(0,50))}"
+            </div>
+            ${att.url ? `<div style="font-size:11px;color:var(--muted);margin-bottom:4px;word-break:break-all;">${esc(att.url.slice(0,80))}</div>` : ''}
+            ${att.caption ? `<div style="font-size:12px;color:var(--muted);font-style:italic;">"${esc(att.caption)}"</div>` : ''}
+          </div>
+          <!-- Actions -->
+          <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+            <button class="btn btn-success" onclick="reviewAttAdmin('${att.id}','approve')">✓ Approve</button>
+            <button class="btn btn-error" onclick="reviewAttAdmin('${att.id}','reject')">✕ Reject</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) { showToast('Failed: ' + e.message, true); }
+}
+
+async function reviewAttAdmin(attId, action) {
+  const reason = action === 'reject' ? (prompt('Rejection reason (optional):') || '') : '';
+  try {
+    await api('POST', '/attachments/' + attId + '/review', { action, reason });
+    showToast(action === 'approve' ? '✅ Approved' : '❌ Rejected');
+    loadAttachments();
+  } catch(e) { showToast('Failed: ' + e.message, true); }
+}
+
 checkAuth();
 </script>
 </body>

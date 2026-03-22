@@ -53,6 +53,7 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/tags', require('./routes/tags'));
 app.use('/api/search', require('./routes/search'));
+app.use('/api/attachments', require('./routes/attachments'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/', require('./routes/pages'));
