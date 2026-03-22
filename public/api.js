@@ -124,6 +124,11 @@ const API = {
   },
   async sendMessage(convId, body) { return apiFetch('POST', '/messages/conversations/' + convId + '/messages', { body }); },
 
+  // Search
+  async predict(q) { return apiFetch('GET', '/search/predict?q=' + encodeURIComponent(q)); },
+  async search(q, type='all', page=1) { return apiFetch('GET', `/search?q=${encodeURIComponent(q)}&type=${type}&page=${page}`); },
+  async searchUsers(params={}) { return apiFetch('GET', '/search/users?' + new URLSearchParams(params).toString()); },
+
   // Friends
   async getFriends() { return apiFetch('GET', '/friends'); },
   async getFriendRequests() { return apiFetch('GET', '/friends/requests'); },

@@ -689,14 +689,45 @@ async function handleFriendAction() {
 
 async function loadFriendsTab(handle) {
   const el = document.getElementById('friendsTabContent');
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading...</div>';
+  el.innerHTML = `
+    <div style="position:relative;margin-bottom:12px;">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="friendSearchInput" placeholder="Search friends…"
+        style="width:100%;padding:8px 12px 8px 32px;background:var(--off);border:1.5px solid var(--bdr);border-radius:var(--r-full);font-size:13px;color:var(--text);transition:all var(--tr);"
+        onfocus="this.style.borderColor='var(--pri)';this.style.boxShadow='0 0 0 3px var(--pri-hl)'"
+        onblur="this.style.borderColor='var(--bdr)';this.style.boxShadow=''"
+        oninput="filterFriendsList(this.value)">
+    </div>
+    <div id="friendsListEl"><div style="text-align:center;padding:20px;color:var(--muted)">Loading...</div></div>`;
+
   try {
     const friends = await API.getUserFriends(handle);
-    if (!friends.length) {
-      el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div style="font-weight:600;margin-bottom:6px">No friends yet</div></div>';
-      return;
-    }
-    el.innerHTML = friends.map(u => `
+    window._friendsCache = friends;
+    renderFriendsList(friends);
+  } catch(e) {
+    document.getElementById('friendsListEl').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Failed to load</div>';
+  }
+}
+
+function filterFriendsList(q) {
+  const friends = window._friendsCache || [];
+  if (!q.trim()) { renderFriendsList(friends); return; }
+  const lower = q.toLowerCase();
+  renderFriendsList(friends.filter(u =>
+    u.handle.toLowerCase().includes(lower) ||
+    u.name.toLowerCase().includes(lower) ||
+    (u.affiliation||'').toLowerCase().includes(lower)
+  ));
+}
+
+function renderFriendsList(friends) {
+  const el = document.getElementById('friendsListEl');
+  if (!el) return;
+  if (!friends.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div style="font-weight:600;margin-bottom:6px">No friends found</div></div>';
+    return;
+  }
+  el.innerHTML = friends.map(u => `
       <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);margin-bottom:10px;transition:all var(--tr);"
            onmouseover="this.style.borderColor='var(--bdr)';this.style.boxShadow='var(--sh-card)'"
            onmouseout="this.style.borderColor='var(--div)';this.style.boxShadow=''">

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network — ResearchSocial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--text-xs:clamp(.75rem,.7rem+.25vw,.875rem);--text-sm:clamp(.875rem,.8rem+.35vw,1rem);--text-base:clamp(1rem,.95rem+.25vw,1.125rem);--text-lg:clamp(1.125rem,1rem+.75vw,1.5rem);--s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--s16:4rem;--r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;--tr:180ms cubic-bezier(.16,1,.3,1);--font:'Inter',sans-serif;--font-d:'DM Serif Display',Georgia,serif;}
+:root,[data-theme="light"]{--bg:#f0f2f5;--surface:#fff;--off:#eef0f3;--dyn:#e2e5ea;--div:#dde0e5;--bdr:#cdd1d8;--text:#1a1d23;--muted:#636878;--faint:#a8adb8;--inv:#fff;--pri:#4f46e5;--pri-h:#3730a3;--pri-hl:#e0e7ff;--suc:#16a34a;--err:#dc2626;--warn:#d97706;--sh-sm:0 1px 3px rgba(0,0,0,.08);--sh-md:0 4px 16px rgba(0,0,0,.1);--sh-card:0 2px 8px rgba(0,0,0,.06);}
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--off:#21262d;--dyn:#2d333b;--div:#30363d;--bdr:#3d444d;--text:#e6edf3;--muted:#8b949e;--faint:#484f58;--inv:#0d1117;--pri:#818cf8;--pri-h:#a5b4fc;--pri-hl:#1e1b4b;--suc:#4ade80;--err:#f87171;--warn:#fbbf24;--sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 16px rgba(0,0,0,.4);--sh-card:0 2px 8px rgba(0,0,0,.25);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+body{min-height:100dvh;font-family:var(--font);font-size:var(--text-base);color:var(--text);background:var(--bg);transition:background .3s,color .3s;}
+img,svg{display:block;max-width:100%;}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;}
+a{color:inherit;text-decoration:none;}
+input,select{font:inherit;color:inherit;}
+:focus-visible{outline:2px solid var(--pri);outline-offset:3px;border-radius:var(--r-sm);}
+
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--div);position:sticky;top:0;z-index:100;}
+.nav-left{display:flex;align-items:center;gap:16px;}
+.nav-back{display:flex;align-items:center;gap:6px;font-size:var(--text-sm);font-weight:500;color:var(--muted);padding:6px 12px;border-radius:var(--r-md);transition:all var(--tr);}
+.nav-back:hover{background:var(--off);color:var(--text);}
+.nav-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:var(--text-lg);font-weight:700;}
+.btn-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-full);color:var(--muted);transition:all var(--tr);}
+.btn-icon:hover{background:var(--off);color:var(--text);}
+
+.page{max-width:1000px;margin:0 auto;padding:28px 24px 80px;}
+.page-title{font-size:var(--text-lg);font-weight:800;font-family:var(--font-d);margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center;}
+.search-wrap{flex:1;min-width:220px;position:relative;}
+.search-input{width:100%;padding:9px 14px 9px 38px;background:var(--surface);border:1.5px solid var(--bdr);border-radius:var(--r-full);font-size:13px;color:var(--text);transition:all var(--tr);}
+.search-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-hl);}
+.search-input::placeholder{color:var(--faint);}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;}
+.filter-select{padding:9px 14px;background:var(--surface);border:1.5px solid var(--bdr);border-radius:var(--r-full);font-size:13px;color:var(--text);transition:all var(--tr);-webkit-appearance:none;appearance:none;cursor:pointer;min-width:140px;}
+.filter-select:focus{outline:none;border-color:var(--pri);}
+.filter-toggle{padding:7px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;border:1.5px solid var(--bdr);color:var(--muted);transition:all var(--tr);}
+.filter-toggle:hover,.filter-toggle.active{border-color:var(--suc);color:var(--suc);background:var(--off);}
+
+/* User grid */
+.user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.user-card{background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);padding:16px;transition:all var(--tr);display:flex;flex-direction:column;gap:10px;}
+.user-card:hover{border-color:var(--bdr);box-shadow:var(--sh-md);transform:translateY(-2px);}
+.user-card-top{display:flex;align-items:flex-start;gap:12px;}
+.user-card-info{flex:1;min-width:0;}
+.user-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.user-handle{font-size:12px;color:var(--muted);}
+.user-aff{font-size:11px;color:var(--pri);margin-top:2px;}
+.user-bio{font-size:12px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.interest-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.chip{font-size:10px;font-weight:500;padding:2px 8px;border-radius:var(--r-full);background:var(--pri-hl);color:var(--pri);}
+.collab-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-full);background:#d1fae5;color:#065f46;}
+[data-theme="dark"] .collab-tag{background:#14532d;color:#34d399;}
+.user-card-actions{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--div);}
+.btn-follow-sm{flex:1;padding:7px;border-radius:var(--r-full);font-size:12px;font-weight:700;border:1.5px solid var(--pri);color:var(--pri);transition:all var(--tr);background:transparent;}
+.btn-follow-sm:hover,.btn-follow-sm.following{background:var(--pri);color:var(--inv);}
+[data-theme="dark"] .btn-follow-sm.following{color:#0d1117;}
+.btn-msg-sm{padding:7px 12px;border-radius:var(--r-full);font-size:12px;font-weight:600;border:1.5px solid var(--bdr);color:var(--muted);transition:all var(--tr);}
+.btn-msg-sm:hover{border-color:var(--pri);color:var(--pri);}
+.follower-count{font-size:11px;color:var(--faint);text-align:center;margin-top:4px;}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:24px;}
+.page-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);font-size:13px;font-weight:600;border:1.5px solid var(--bdr);color:var(--muted);cursor:pointer;transition:all var(--tr);}
+.page-btn:hover,.page-btn.active{background:var(--pri-hl);color:var(--pri);border-color:var(--pri);}
+
+/* Skeleton */
+.skeleton{background:var(--dyn);border-radius:var(--r-md);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.skeleton-card{background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);padding:16px;}
+
+.result-count{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.empty{text-align:center;padding:60px 20px;color:var(--faint);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+
+.site-footer{text-align:center;padding:24px;font-size:12px;color:var(--faint);border-top:1px solid var(--div);}
+.site-footer a{color:var(--pri);}
+@media(max-width:600px){.page{padding:16px 12px 60px;}.user-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/" class="nav-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Feed</a>
+    <a href="/" class="nav-logo">
+      <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="var(--pri)"/><circle cx="11" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none"/><circle cx="21" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".6"/><circle cx="16" cy="21" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".8"/></svg>
+      <span>ResearchSocial</span>
+    </a>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-icon" data-theme-toggle><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+    <div id="navInfo"></div>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title">Network</h1>
+  <p class="page-sub">Discover and connect with researchers from around the world.</p>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="text" id="networkSearch" placeholder="Search by name, handle, affiliation…" oninput="onSearchInput()">
+    </div>
+    <select class="filter-select" id="interestFilter" onchange="load(1)">
+      <option value="">All fields</option>
+      <option value="sleep">Sleep Research</option>
+      <option value="neuroscience">Neuroscience</option>
+      <option value="cognitive">Cognitive Science</option>
+      <option value="genomics">Genomics</option>
+      <option value="climate">Climate & Health</option>
+      <option value="behavioral">Behavioral Economics</option>
+      <option value="bioinformatics">Bioinformatics</option>
+      <option value="psychology">Psychology</option>
+      <option value="psychiatry">Psychiatry</option>
+    </select>
+    <button class="filter-toggle" id="collabToggle" onclick="toggleCollab()">🤝 Open to Collab</button>
+  </div>
+
+  <div id="resultCount" class="result-count"></div>
+  <div id="networkGrid" class="user-grid">
+    ${[1,2,3,4,5,6].map(()=>`<div class="skeleton-card"><div style="display:flex;gap:10px;"><div class="skeleton" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;"></div><div style="flex:1;"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px;"></div><div class="skeleton" style="height:12px;width:80%;"></div></div></div></div>`).join('')}
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<footer class="site-footer"><a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a></footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/api.js"></script>
+<script>
+(function(){const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;let d=localStorage.getItem('rs_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');r.setAttribute('data-theme',d);upd(d);t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);localStorage.setItem('rs_theme',d);upd(d);});function upd(v){t.innerHTML=v==='dark'?`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;}})();
+
+const me = Auth.getUser();
+let onlyCollab = false;
+let searchTimer = null;
+let currentPage = 1;
+
+if (me) {
+  document.getElementById('navInfo').innerHTML = `<a href="/profile/${esc(me.handle)}" style="font-size:13px;font-weight:600;color:var(--muted);padding:6px 10px;border-radius:var(--r-full);background:var(--off);border:1px solid var(--bdr);">@${esc(me.handle)}</a>`;
+}
+
+async function load(page = 1) {
+  currentPage = page;
+  const q = document.getElementById('networkSearch').value.trim();
+  const interests = document.getElementById('interestFilter').value;
+
+  const params = { page, limit: 18 };
+  if (q) params.q = q;
+  if (interests) params.interests = interests;
+  if (onlyCollab) params.open_to_collab = 'true';
+
+  // Show skeleton
+  if (page === 1) {
+    document.getElementById('networkGrid').innerHTML = [1,2,3,4,5,6].map(()=>`<div class="skeleton-card"><div style="display:flex;gap:10px;"><div class="skeleton" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;"></div><div style="flex:1;"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px;"></div><div class="skeleton" style="height:12px;width:80%;"></div></div></div></div>`).join('');
+  }
+
+  try {
+    const data = await API.searchUsers(params);
+    document.getElementById('resultCount').textContent = `${data.total.toLocaleString()} researcher${data.total !== 1 ? 's' : ''}`;
+    renderGrid(data.users);
+    renderPagination(data.total, 18, page, data.pages);
+  } catch(e) {
+    document.getElementById('networkGrid').innerHTML = `<div style="grid-column:1/-1;" class="empty"><div class="empty-icon">⚠️</div><div>${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderGrid(users) {
+  const grid = document.getElementById('networkGrid');
+  if (!users.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;" class="empty"><div class="empty-icon">👥</div><div style="font-weight:600;margin-bottom:6px;">No researchers found</div><div style="font-size:13px;">Try different filters or search terms.</div></div>`;
+    return;
+  }
+  grid.innerHTML = users.map(u => `
+  <div class="user-card">
+    <div class="user-card-top">
+      <a href="/profile/${esc(u.handle)}">${avatarSVG(u, 48)}</a>
+      <div class="user-card-info">
+        <div class="user-name">
+          <a href="/profile/${esc(u.handle)}" onmouseover="this.style.color='var(--pri)'" onmouseout="this.style.color=''" style="transition:color var(--tr);">${esc(u.name)}</a>
+          ${u.is_verified ? '<span style="color:var(--pri);font-size:11px" title="Verified">✓</span>' : ''}
+          ${u.open_to_collab ? '<span class="collab-tag">🤝 Open</span>' : ''}
+        </div>
+        <div class="user-handle">@${esc(u.handle)}</div>
+        ${u.affiliation ? `<div class="user-aff">${esc(u.affiliation)}</div>` : ''}
+      </div>
+    </div>
+    ${u.bio ? `<div class="user-bio">${esc(u.bio)}</div>` : ''}
+    ${u.interests?.length ? `<div class="interest-chips">${u.interests.slice(0,3).map(i=>`<span class="chip">${esc(i)}</span>`).join('')}${u.interests.length>3?`<span style="font-size:10px;color:var(--faint);">+${u.interests.length-3}</span>`:''}</div>` : ''}
+    <div class="user-card-actions">
+      <button class="btn-follow-sm" onclick="handleFollow('${esc(u.handle)}',this)">Follow</button>
+      <a href="/messages?with=${esc(u.id)}" class="btn-msg-sm">Message</a>
+    </div>
+    <div class="follower-count">${fmtNum(u.followers_count||0)} followers</div>
+  </div>`).join('');
+}
+
+function renderPagination(total, limit, page, pages) {
+  const el = document.getElementById('pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = '';
+  if (page > 1) html += `<button class="page-btn" onclick="load(${page-1})">‹</button>`;
+  for (let i = Math.max(1, page-2); i <= Math.min(pages, page+2); i++) {
+    html += `<button class="page-btn ${i===page?'active':''}" onclick="load(${i})">${i}</button>`;
+  }
+  if (page < pages) html += `<button class="page-btn" onclick="load(${page+1})">›</button>`;
+  el.innerHTML = html;
+}
+
+function toggleCollab() {
+  onlyCollab = !onlyCollab;
+  document.getElementById('collabToggle').classList.toggle('active', onlyCollab);
+  load(1);
+}
+
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => load(1), 350);
+}
+
+async function handleFollow(handle, btn) {
+  if (!me) { window.location.href = '/'; return; }
+  try {
+    const res = await API.followUser(handle);
+    btn.classList.toggle('following', res.following);
+    btn.textContent = res.following ? '✓ Following' : 'Follow';
+    showToast(res.following ? `✅ Following @${handle}` : `Unfollowed @${handle}`);
+  } catch(e) { showToast('⚠️ ' + e.message); }
+}
+
+load(1);
+</script>
+</body>
+</html>
