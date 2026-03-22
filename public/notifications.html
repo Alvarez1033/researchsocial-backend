@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications — ResearchSocial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--text-xs:clamp(.75rem,.7rem+.25vw,.875rem);--text-sm:clamp(.875rem,.8rem+.35vw,1rem);--text-base:clamp(1rem,.95rem+.25vw,1.125rem);--text-lg:clamp(1.125rem,1rem+.75vw,1.5rem);--s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--s16:4rem;--r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;--tr:180ms cubic-bezier(.16,1,.3,1);--font:'Inter',sans-serif;--font-d:'DM Serif Display',Georgia,serif;}
+:root,[data-theme="light"]{--bg:#f0f2f5;--surface:#fff;--off:#eef0f3;--dyn:#e2e5ea;--div:#dde0e5;--bdr:#cdd1d8;--text:#1a1d23;--muted:#636878;--faint:#a8adb8;--inv:#fff;--pri:#4f46e5;--pri-h:#3730a3;--pri-hl:#e0e7ff;--suc:#16a34a;--err:#dc2626;--warn:#d97706;--sh-sm:0 1px 3px rgba(0,0,0,.08);--sh-md:0 4px 16px rgba(0,0,0,.1);--sh-card:0 2px 8px rgba(0,0,0,.06);}
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--off:#21262d;--dyn:#2d333b;--div:#30363d;--bdr:#3d444d;--text:#e6edf3;--muted:#8b949e;--faint:#484f58;--inv:#0d1117;--pri:#818cf8;--pri-h:#a5b4fc;--pri-hl:#1e1b4b;--suc:#4ade80;--err:#f87171;--warn:#fbbf24;--sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 16px rgba(0,0,0,.4);--sh-card:0 2px 8px rgba(0,0,0,.25);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+body{min-height:100dvh;font-family:var(--font);font-size:var(--text-base);color:var(--text);background:var(--bg);transition:background .3s,color .3s;}
+img,svg{display:block;max-width:100%;}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--pri);outline-offset:3px;border-radius:var(--r-sm);}
+
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--div);position:sticky;top:0;z-index:100;}
+.nav-left{display:flex;align-items:center;gap:16px;}
+.nav-back{display:flex;align-items:center;gap:6px;font-size:var(--text-sm);font-weight:500;color:var(--muted);padding:6px 12px;border-radius:var(--r-md);transition:all var(--tr);}
+.nav-back:hover{background:var(--off);color:var(--text);}
+.nav-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:var(--text-lg);font-weight:700;}
+.btn-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-full);color:var(--muted);transition:all var(--tr);}
+.btn-icon:hover{background:var(--off);color:var(--text);}
+
+.page{max-width:680px;margin:0 auto;padding:32px 24px 80px;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-title{font-size:var(--text-lg);font-weight:800;font-family:var(--font-d);}
+
+/* Filter tabs */
+.filter-tabs{display:flex;gap:4px;background:var(--off);border-radius:var(--r-full);padding:4px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-tab{padding:6px 14px;border-radius:var(--r-full);font-size:var(--text-sm);font-weight:500;color:var(--muted);cursor:pointer;transition:all var(--tr);}
+.filter-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm);}
+
+/* Notification item */
+.notif-item{display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);margin-bottom:8px;cursor:pointer;transition:all var(--tr);position:relative;}
+.notif-item:hover{border-color:var(--bdr);box-shadow:var(--sh-card);transform:translateY(-1px);}
+.notif-item.unread{border-left:3px solid var(--pri);background:var(--pri-hl);}
+.notif-item.unread:hover{border-color:var(--pri);}
+.notif-icon-wrap{width:42px;height:42px;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative;}
+.notif-type-dot{position:absolute;bottom:-1px;right:-1px;width:16px;height:16px;border-radius:50%;border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:9px;}
+.notif-content{flex:1;min-width:0;}
+.notif-title{font-size:var(--text-sm);font-weight:600;color:var(--text);line-height:1.4;}
+.notif-title a{color:var(--pri);}
+.notif-body{font-size:var(--text-xs);color:var(--muted);margin-top:3px;line-height:1.5;}
+.notif-time{font-size:10px;color:var(--faint);margin-top:4px;}
+.notif-unread-dot{width:8px;height:8px;background:var(--pri);border-radius:50%;flex-shrink:0;margin-top:6px;}
+
+/* Mark all read btn */
+.btn-mark-all{padding:7px 14px;border:1.5px solid var(--bdr);border-radius:var(--r-full);font-size:var(--text-xs);font-weight:600;color:var(--muted);transition:all var(--tr);}
+.btn-mark-all:hover{border-color:var(--pri);color:var(--pri);}
+
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px;color:var(--faint);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+
+/* Skeleton */
+.skeleton{background:var(--dyn);border-radius:var(--r-md);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+/* Auth wall */
+.auth-wall{max-width:400px;margin:80px auto;text-align:center;padding:40px;}
+.auth-wall h2{font-family:var(--font-d);font-size:24px;margin-bottom:12px;}
+.auth-wall p{color:var(--muted);font-size:14px;margin-bottom:24px;line-height:1.6;}
+.btn-auth{display:inline-block;padding:12px 32px;background:var(--pri);color:var(--inv);border-radius:var(--r-full);font-weight:700;font-size:14px;transition:all var(--tr);}
+.btn-auth:hover{background:var(--pri-h);transform:translateY(-1px);}
+[data-theme="dark"] .btn-auth{color:#0d1117;}
+
+.site-footer{text-align:center;padding:24px;font-size:12px;color:var(--faint);border-top:1px solid var(--div);margin-top:32px;}
+.site-footer a{color:var(--pri);}
+@media(max-width:600px){.page{padding:20px 16px 60px;}.navbar{padding:10px 16px;}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/" class="nav-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      Feed
+    </a>
+    <a href="/" class="nav-logo">
+      <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="var(--pri)"/><circle cx="11" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none"/><circle cx="21" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".6"/><circle cx="16" cy="21" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".8"/></svg>
+      <span>ResearchSocial</span>
+    </a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn-icon" data-theme-toggle>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <div id="navInfo"></div>
+  </div>
+</nav>
+
+<div id="appContent">
+  <!-- Auth wall shown if not signed in -->
+  <div class="auth-wall" id="authWall" style="display:none;">
+    <div style="font-size:48px;margin-bottom:16px;">🔔</div>
+    <h2>Notifications</h2>
+    <p>Sign in to see your likes, comments, friend requests, and messages.</p>
+    <a href="/" class="btn-auth">Sign In on Feed</a>
+  </div>
+
+  <!-- Notifications UI -->
+  <div class="page" id="notifPage" style="display:none;">
+    <div class="page-header">
+      <h1 class="page-title">Notifications</h1>
+      <button class="btn-mark-all" id="markAllBtn" onclick="markAllRead()">Mark all as read</button>
+    </div>
+
+    <div class="filter-tabs" id="filterTabs">
+      <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-tab" onclick="setFilter('new_message',this)">💬 Messages</button>
+      <button class="filter-tab" onclick="setFilter('post_like',this)">❤️ Likes</button>
+      <button class="filter-tab" onclick="setFilter('post_comment',this)">🗨️ Comments</button>
+      <button class="filter-tab" onclick="setFilter('follow',this)">👥 Social</button>
+      <button class="filter-tab" onclick="setFilter('system',this)">📢 System</button>
+    </div>
+
+    <div id="notifList">
+      <!-- skeleton -->
+      ${[1,2,3,4].map(() => `
+      <div style="display:flex;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);margin-bottom:8px;">
+        <div class="skeleton" style="width:42px;height:42px;border-radius:50%;flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div class="skeleton" style="height:14px;width:70%;margin-bottom:8px;"></div>
+          <div class="skeleton" style="height:12px;width:45%;"></div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer"><a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a></footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/api.js"></script>
+<script>
+// ── Theme ─────────────────────────────────────────────────────────────────────
+(function(){
+  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=localStorage.getItem('rs_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  r.setAttribute('data-theme',d);upd(d);
+  t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);localStorage.setItem('rs_theme',d);upd(d);});
+  function upd(v){t.innerHTML=v==='dark'?`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;}
+})();
+
+const me = Auth.getUser();
+let allNotifs = [];
+let currentFilter = 'all';
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+if (me) {
+  document.getElementById('navInfo').innerHTML = `
+    <a href="/profile/${esc(me.handle)}" style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);padding:6px 10px;border-radius:var(--r-full);background:var(--off);border:1px solid var(--bdr);">
+      ${avatarSVG(me, 22)} @${esc(me.handle)}
+    </a>`;
+}
+
+// ── Notification type config ──────────────────────────────────────────────────
+const NOTIF_CONFIG = {
+  new_message:           { emoji: '💬', color: '#818cf8', dot: '💬', label: 'Message' },
+  post_like:             { emoji: '❤️', color: '#f87171', dot: '❤️', label: 'Like' },
+  post_comment:          { emoji: '🗨️', color: '#34d399', dot: '💬', label: 'Comment' },
+  follow:                { emoji: '👤', color: '#38bdf8', dot: '➕', label: 'Follow' },
+  collaboration_request: { emoji: '🤝', color: '#fbbf24', dot: '🤝', label: 'Collab' },
+  post_approved:         { emoji: '✅', color: '#4ade80', dot: '✓',  label: 'Approved' },
+  post_rejected:         { emoji: '❌', color: '#f87171', dot: '✗',  label: 'Rejected' },
+  mention:               { emoji: '📣', color: '#a78bfa', dot: '@',  label: 'Mention' },
+  system:                { emoji: '📢', color: '#8b949e', dot: '!',  label: 'System' },
+};
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  if (!me) {
+    document.getElementById('authWall').style.display = 'block';
+    return;
+  }
+  document.getElementById('notifPage').style.display = 'block';
+  loadNotifications();
+  initSocket();
+}
+
+// ── Load notifications ────────────────────────────────────────────────────────
+async function loadNotifications() {
+  try {
+    allNotifs = await API.getNotifications(false);
+    renderNotifications();
+
+    // Mark all as read after a short delay
+    setTimeout(async () => {
+      await API.markNotificationsRead();
+      // Update unread dots visually without re-fetching
+    }, 2000);
+  } catch(e) {
+    document.getElementById('notifList').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div><div>${esc(e.message)}</div></div>`;
+  }
+}
+
+function setFilter(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const filtered = currentFilter === 'all'
+    ? allNotifs
+    : allNotifs.filter(n => {
+        if (currentFilter === 'follow') return ['follow','collaboration_request'].includes(n.type);
+        return n.type === currentFilter;
+      });
+
+  const el = document.getElementById('notifList');
+
+  if (!filtered.length) {
+    const labels = { all:'notifications', new_message:'messages', post_like:'likes', post_comment:'comments', follow:'social activity', system:'system messages' };
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <div style="font-weight:600;margin-bottom:6px;">No ${labels[currentFilter]||'notifications'} yet</div>
+        <div style="font-size:13px;">When researchers interact with your posts, you'll see it here.</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(n => renderNotif(n)).join('');
+
+  // Wire click handlers
+  el.querySelectorAll('.notif-item[data-link]').forEach(item => {
+    item.addEventListener('click', () => {
+      const link = item.dataset.link;
+      if (link && link !== 'null') window.location.href = link;
+    });
+  });
+}
+
+function renderNotif(n) {
+  const cfg = NOTIF_CONFIG[n.type] || NOTIF_CONFIG.system;
+  const actor = n.actor_handle ? {
+    handle: n.actor_handle,
+    color: n.actor_color || cfg.color,
+    initials: n.actor_initials || n.actor_handle.slice(0,2).toUpperCase(),
+    avatar_url: n.actor_avatar
+  } : null;
+
+  return `
+  <div class="notif-item ${n.is_read ? '' : 'unread'}" data-link="${esc(n.link||'')}" data-id="${esc(n.id)}">
+    <div class="notif-icon-wrap" style="background:${cfg.color}22;">
+      ${actor ? avatarSVG(actor, 42) : `<span style="font-size:20px;">${cfg.emoji}</span>`}
+      <div class="notif-type-dot" style="background:${cfg.color};">${cfg.emoji}</div>
+    </div>
+    <div class="notif-content">
+      <div class="notif-title">
+        ${actor ? `<a href="/profile/${esc(n.actor_handle)}" onclick="event.stopPropagation()">@${esc(n.actor_handle)}</a> — ` : ''}${esc(n.title)}
+      </div>
+      ${n.body ? `<div class="notif-body">${esc(n.body)}</div>` : ''}
+      <div class="notif-time">${fmtTime(n.created_at)}</div>
+    </div>
+    ${!n.is_read ? '<div class="notif-unread-dot"></div>' : ''}
+  </div>`;
+}
+
+async function markAllRead() {
+  try {
+    await API.markNotificationsRead();
+    allNotifs = allNotifs.map(n => ({ ...n, is_read: true }));
+    renderNotifications();
+    showToast('✓ All notifications marked as read');
+  } catch(e) { showToast('⚠️ ' + e.message); }
+}
+
+// ── Real-time ─────────────────────────────────────────────────────────────────
+function initSocket() {
+  const socket = getSocket();
+  if (!socket) return;
+  socket.on('notification', async () => {
+    // Reload notifications when a new one arrives
+    allNotifs = await API.getNotifications(false).catch(() => allNotifs);
+    renderNotifications();
+    showToast('🔔 New notification!');
+  });
+}
+
+init();
+</script>
+</body>
+</html>

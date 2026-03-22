@@ -7,5 +7,6 @@ const pub = (...p) => path.join(__dirname, '../../public', ...p);
 router.get('/profile/:handle', (req, res) => res.sendFile(pub('profile.html')));
 router.get('/messages', (req, res) => res.sendFile(pub('messages.html')));
 router.get('/messages/:id', (req, res) => res.sendFile(pub('messages.html')));
+router.get('/notifications', (req, res) => res.sendFile(pub('notifications.html')));
 
 module.exports = router;
