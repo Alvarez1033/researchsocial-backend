@@ -720,6 +720,69 @@ document.addEventListener('click', async e => {
   }
 });
 
+// ─── Post listeners ──────────────────────────────────────────────────────────
+function attachPostListeners() {
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.replaceWith(btn.cloneNode(true)); // remove old listeners
+  });
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!Auth.isLoggedIn()) { openAuth(); return; }
+      const id = btn.dataset.id;
+      try {
+        const res = await API.likePost(id);
+        btn.classList.toggle('liked', res.liked);
+        btn.querySelector('svg').setAttribute('fill', res.liked ? 'currentColor' : 'none');
+        btn.querySelector('.like-count').textContent = fmtNum(res.count);
+        if (res.liked) showToast('❤️ Liked!');
+      } catch(e) { showToast('⚠️ ' + e.message); }
+    });
+  });
+
+  document.querySelectorAll('.comment-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentCommentPostId = btn.dataset.id;
+      document.getElementById('commentPostTitle').textContent = btn.dataset.title;
+      document.getElementById('commentList').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading…</div>';
+      openModal('commentModal');
+      loadComments(currentCommentPostId);
+    });
+  });
+
+  document.querySelectorAll('.btn-collab:not(.sent)').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!Auth.isLoggedIn()) { openAuth(); return; }
+      const handle = btn.dataset.handle;
+      const postId = btn.dataset.postId;
+      try {
+        await API.sendCollab(handle, postId, 'I would like to collaborate on your research.');
+        btn.classList.add('sent');
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Sent</span>`;
+        showToast('🤝 Collaboration request sent!');
+      } catch(e) { showToast('⚠️ ' + e.message); }
+    });
+  });
+
+  document.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard?.writeText(window.location.href).then(() => showToast('🔗 Link copied!'));
+    });
+  });
+
+  document.querySelectorAll('.bookmark-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!Auth.isLoggedIn()) { openAuth(); return; }
+      const id = btn.dataset.id;
+      try {
+        const res = await API.bookmarkPost(id);
+        btn.classList.toggle('bookmarked', res.bookmarked);
+        btn.querySelector('svg').setAttribute('fill', res.bookmarked ? 'currentColor' : 'none');
+        showToast(res.bookmarked ? '🔖 Saved to library' : 'Removed from library');
+      } catch(e) { showToast('⚠️ ' + e.message); }
+    });
+  });
+}
+
 // ─── Comments ─────────────────────────────────────────────────────────────────
 async function loadComments(postId) {
   try {
