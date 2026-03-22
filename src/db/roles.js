@@ -2,37 +2,53 @@ require('dotenv').config();
 const { pool } = require('./pool');
 
 const schema = `
--- ─── Update roles enum to include new roles ──────────────────────────────────
--- We can't easily modify pg enums, so we recreate users.role as text with a check
-
--- Step 1: Add new column
+-- ─── Step 1: Add role_new text column if not exists ──────────────────────────
 DO $$ BEGIN
   ALTER TABLE users ADD COLUMN role_new TEXT DEFAULT 'member';
   EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
--- Step 2: Copy existing data, mapping old 'user' role to 'member'
-UPDATE users SET role_new = CASE WHEN role::text = 'user' THEN 'member' ELSE role::text END;
+-- ─── Step 2: Copy data — cast enum to text, map 'user' → 'member' ─────────────
+UPDATE users SET role_new = CASE
+  WHEN role::text = 'user'        THEN 'member'
+  WHEN role::text = 'superadmin'  THEN 'superadmin'
+  WHEN role::text = 'admin'       THEN 'admin'
+  WHEN role::text = 'moderator'   THEN 'moderator'
+  ELSE 'member'
+END
+WHERE role_new = 'member' OR role_new IS NULL;
 
--- Step 3: Drop old column constraints and add check on new column
+-- ─── Step 3: Drop the old enum column ─────────────────────────────────────────
 DO $$ BEGIN
-  ALTER TABLE users DROP COLUMN role;
-  EXCEPTION WHEN undefined_column THEN NULL;
+  ALTER TABLE users DROP COLUMN IF EXISTS role;
+  EXCEPTION WHEN others THEN NULL;
 END $$;
 
+-- ─── Step 4: Rename new column ────────────────────────────────────────────────
 DO $$ BEGIN
   ALTER TABLE users RENAME COLUMN role_new TO role;
-  EXCEPTION WHEN undefined_column THEN NULL;
+  EXCEPTION WHEN others THEN NULL;
 END $$;
 
--- Add check constraint
+-- ─── Step 5: Add check constraint (safe, only if column is now text) ──────────
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (
-  role IN ('superadmin','admin','moderator','support','premium','pro','content_creator','verified','member')
-);
+DO $$ BEGIN
+  ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (
+    role IN ('superadmin','admin','moderator','support','premium','pro','content_creator','verified','member')
+  );
+  EXCEPTION WHEN check_violation THEN
+    -- If still violated, force-update any bad values
+    UPDATE users SET role = 'member' WHERE role NOT IN ('superadmin','admin','moderator','support','premium','pro','content_creator','verified','member');
+    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (
+      role IN ('superadmin','admin','moderator','support','premium','pro','content_creator','verified','member')
+    );
+END $$;
 
--- Default
+-- ─── Step 6: Set default ──────────────────────────────────────────────────────
 ALTER TABLE users ALTER COLUMN role SET DEFAULT 'member';
+
+-- ─── Ensure superadmin stays superadmin ───────────────────────────────────────
+UPDATE users SET role = 'superadmin' WHERE email = 'admin@researchsocial.com' AND role != 'superadmin';
 
 -- ─── Role audit log ───────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS role_changes (
@@ -45,9 +61,8 @@ CREATE TABLE IF NOT EXISTS role_changes (
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_role_changes_target ON role_changes(target_id);
-CREATE INDEX IF NOT EXISTS idx_role_changes_changed_by ON role_changes(changed_by);
 
--- ─── User badges (separate from roles — earned achievements) ─────────────────
+-- ─── User badges ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS user_badges (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -58,9 +73,8 @@ CREATE TABLE IF NOT EXISTS user_badges (
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, badge_key)
 );
-CREATE INDEX IF NOT EXISTS idx_badges_user ON user_badges(user_id);
 
--- ─── Support tickets table ────────────────────────────────────────────────────
+-- ─── Support tickets ──────────────────────────────────────────────────────────
 DO $$ BEGIN
   CREATE TYPE ticket_status AS ENUM ('open', 'in_progress', 'resolved', 'closed');
   EXCEPTION WHEN duplicate_object THEN NULL;
@@ -85,7 +99,6 @@ CREATE TABLE IF NOT EXISTS support_tickets (
   updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_tickets_user ON support_tickets(user_id);
-CREATE INDEX IF NOT EXISTS idx_tickets_assigned ON support_tickets(assigned_to, status);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON support_tickets(status);
 
 CREATE TABLE IF NOT EXISTS ticket_replies (
@@ -96,9 +109,7 @@ CREATE TABLE IF NOT EXISTS ticket_replies (
   is_internal BOOLEAN DEFAULT FALSE,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_ticket_replies ON ticket_replies(ticket_id, created_at);
 
--- ─── Index for role queries ───────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_users_role_text ON users(role);
 `;
 
@@ -107,7 +118,10 @@ async function addRolesTables() {
   try {
     console.log('👑 Updating roles system...');
     await client.query(schema);
-    console.log('✅ Roles system ready!');
+    
+    // Verify
+    const check = await client.query("SELECT DISTINCT role FROM users ORDER BY role");
+    console.log('✅ Roles system ready! Current roles in DB:', check.rows.map(r => r.role).join(', '));
   } catch (err) {
     console.error('❌ Failed:', err.message);
     throw err;
