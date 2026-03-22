@@ -208,3 +208,34 @@ function showToast(msg) {
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => { t.style.transform = 'translateY(12px)'; t.style.opacity = '0'; }, 2800);
 }
+
+// ─── Role config (shared frontend) ───────────────────────────────────────────
+const ROLE_CONFIG = {
+  superadmin:      { label:'Superadmin',      color:'#7c2d12', bg:'rgba(124,45,18,.15)', icon:'👑' },
+  admin:           { label:'Admin',           color:'#0369a1', bg:'rgba(3,105,161,.15)', icon:'🛡️' },
+  moderator:       { label:'Moderator',       color:'#b45309', bg:'rgba(180,83,9,.15)',  icon:'🔨' },
+  support:         { label:'Support',         color:'#6d28d9', bg:'rgba(109,40,217,.15)',icon:'🎧' },
+  premium:         { label:'Premium',         color:'#b45309', bg:'rgba(180,83,9,.1)',   icon:'⭐' },
+  pro:             { label:'Pro',             color:'#0e7490', bg:'rgba(14,116,144,.15)',icon:'🚀' },
+  content_creator: { label:'Content Creator', color:'#7c3aed', bg:'rgba(124,58,237,.15)',icon:'✍️' },
+  verified:        { label:'Verified',        color:'#0ea5e9', bg:'rgba(14,165,233,.15)',icon:'✓'  },
+  member:          { label:'Member',          color:'#4b5563', bg:'rgba(75,85,99,.1)',   icon:null  },
+};
+
+function roleBadgeHTML(role) {
+  if (!role || role === 'member') return '';
+  const cfg = ROLE_CONFIG[role] || ROLE_CONFIG.member;
+  if (!cfg.icon) return '';
+  return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9999px;background:${cfg.bg};color:${cfg.color};">${cfg.icon} ${cfg.label}</span>`;
+}
+
+// Roles API
+const RolesAPI = {
+  async getMyPermissions() { return apiFetch('GET', '/roles/my'); },
+  async assignRole(userId, role, reason) { return apiFetch('POST', '/roles/assign', { userId, role, reason }); },
+  async getRoleHistory(userId) { return apiFetch('GET', '/roles/history/' + userId); },
+  async createTicket(subject, body, category) { return apiFetch('POST', '/roles/tickets', { subject, body, category }); },
+  async getTickets(status) { return apiFetch('GET', '/roles/tickets' + (status ? '?status=' + status : '')); },
+  async getTicket(id) { return apiFetch('GET', '/roles/tickets/' + id); },
+  async replyTicket(id, body, isInternal) { return apiFetch('POST', '/roles/tickets/' + id + '/reply', { body, isInternal }); },
+};

@@ -324,16 +324,19 @@ function getBadges(user) {
 // ── Role badge ────────────────────────────────────────────────────────────────
 function roleBadgeHTML(role) {
   const map = {
-    superadmin: { label: 'Superadmin', bg: '#fff1f2', color: '#7c2d12' },
-    admin:      { label: 'Admin',      bg: '#e0f2fe', color: '#0369a1' },
-    moderator:  { label: 'Moderator',  bg: '#fef3c7', color: '#b45309' },
-    researcher: { label: 'Researcher', bg: '#ede9fe', color: '#7c3aed' },
-    clinician:  { label: 'Clinician',  bg: '#e0f4f1', color: '#0d7c6e' },
-    contributor:{ label: 'Contributor',bg: '#ddeef8', color: '#1d6fa4' },
-    member:     { label: 'Member',     bg: '#edf0f3', color: '#4f5d6e' },
+    superadmin:      { label:'Superadmin',      bg:'rgba(124,45,18,.15)',   color:'#7c2d12', icon:'👑' },
+    admin:           { label:'Admin',           bg:'rgba(3,105,161,.15)',   color:'#0369a1', icon:'🛡️' },
+    moderator:       { label:'Moderator',       bg:'rgba(180,83,9,.15)',    color:'#b45309', icon:'🔨' },
+    support:         { label:'Support',         bg:'rgba(109,40,217,.15)',  color:'#6d28d9', icon:'🎧' },
+    premium:         { label:'Premium',         bg:'rgba(180,83,9,.1)',     color:'#b45309', icon:'⭐' },
+    pro:             { label:'Pro',             bg:'rgba(14,116,144,.15)',  color:'#0e7490', icon:'🚀' },
+    content_creator: { label:'Content Creator', bg:'rgba(124,58,237,.15)', color:'#7c3aed', icon:'✍️' },
+    verified:        { label:'Verified',        bg:'rgba(14,165,233,.15)',  color:'#0ea5e9', icon:'✓'  },
+    member:          { label:'Member',          bg:'rgba(75,85,99,.1)',     color:'#4b5563', icon:null  },
   };
   const r = map[role] || map.member;
-  return `<span class="profile-role" style="background:${r.bg};color:${r.color};">${r.label}</span>`;
+  if (!r.icon) return '';
+  return `<span class="profile-role" style="background:${r.bg};color:${r.color};">${r.icon} ${r.label}</span>`;
 }
 
 // ── Load profile ─────────────────────────────────────────────────────────────

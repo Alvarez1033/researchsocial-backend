@@ -1,12 +1,13 @@
 const express = require('express');
 const { query } = require('../db/pool');
-const { requireAuth, requireMod, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireMod, requireAdmin, requireSupport } = require('../middleware/auth');
+const { ROLES, canManageUser, roleLevel, hasPermission } = require('../config/roles');
 const { getAnalyticsSummary } = require('../middleware/analytics');
 
 const router = express.Router();
 
-// All admin routes require auth + mod role minimum
-router.use(requireAuth, requireMod);
+// Admin routes — minimum 'support' level for access
+router.use(requireAuth, requireSupport);
 
 // ─── DASHBOARD STATS ─────────────────────────────────────────────────────────
 router.get('/stats', async (req, res, next) => {
@@ -131,10 +132,9 @@ router.post('/users/:id/moderate', requireAdmin, async (req, res, next) => {
     const target = await query('SELECT id, handle, role FROM users WHERE id = $1', [req.params.id]);
     if (!target.rows.length) return res.status(404).json({ error: 'User not found' });
 
-    // Prevent modifying higher-ranked users
-    const roleRank = { user: 0, moderator: 1, admin: 2, superadmin: 3 };
-    if (roleRank[target.rows[0].role] >= roleRank[req.user.role]) {
-      return res.status(403).json({ error: 'Cannot moderate a user with equal or higher role' });
+    // Prevent modifying users at or above your level
+    if (!canManageUser(req.user.role, target.rows[0].role)) {
+      return res.status(403).json({ error: `Cannot moderate a ${target.rows[0].role} — they are at or above your level` });
     }
 
     let updateSql, updateParams;

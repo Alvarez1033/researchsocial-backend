@@ -373,7 +373,14 @@ canvas{max-height:220px;}
     <h1 class="page-title">Users</h1>
     <div class="filters-bar">
       <div class="search-box"><svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search by name, handle, email…" id="userSearch" oninput="loadUsers()"></div>
-      <select class="form-select" style="width:140px;" id="userRoleFilter" onchange="loadUsers()"><option value="">All roles</option><option value="user">User</option><option value="moderator">Moderator</option><option value="admin">Admin</option></select>
+      <select class="form-select" style="width:140px;" id="userRoleFilter" onchange="loadUsers()"><option value="">All roles</option><option value="member">👤 Member</option>
+                <option value="verified">✓ Verified</option>
+                <option value="premium">⭐ Premium</option>
+                <option value="pro">🚀 Pro</option>
+                <option value="content_creator">✍️ Content Creator</option>
+                <option value="support">🎧 Support</option>
+                <option value="moderator">🔨 Moderator</option>
+                <option value="admin">🛡️ Admin</option></select>
       <select class="form-select" style="width:140px;" id="userStatusFilter" onchange="loadUsers()"><option value="">All statuses</option><option value="active">Active</option><option value="muted">Muted</option><option value="timed_out">Timed Out</option><option value="suspended">Suspended</option><option value="banned">Banned</option></select>
     </div>
     <div class="card table-wrap">
@@ -447,6 +454,7 @@ canvas{max-height:220px;}
     <div class="modal-body" id="userModalBody"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('userModal')">Cancel</button>
+      <button class="btn btn-ghost" id="roleHistoryBtn" onclick="showRoleHistory(currentModalUserId)">📋 Role History</button>
       <button class="btn btn-primary" id="userModalConfirm">Apply</button>
     </div>
   </div>
@@ -942,19 +950,32 @@ function openUserModal(id, handle, name, status, role) {
     <div class="form-group"><label class="form-label">Action</label>
     <select class="form-select" id="modAction">
       <option value="">— Select action —</option>
-      <option value="verify">✓ Verify (grant badge)</option>
-      <option value="unverify">Remove verification</option>
-      <option value="mute">🔇 Mute (can't post/comment)</option>
-      <option value="unmute">Unmute</option>
-      <option value="timeout">⏱ Timeout</option>
-      <option value="suspend">⛔ Suspend account</option>
-      <option value="unsuspend">Restore account</option>
-      <option value="ban">🚫 Permanent ban</option>
-      <option value="unban">Unban</option>
-      <option value="set_role">👑 Change role</option>
+      <optgroup label="Account Status">
+        <option value="mute">🔇 Mute (can't post/comment)</option>
+        <option value="unmute">Unmute</option>
+        <option value="timeout">⏱ Timeout</option>
+        <option value="suspend">⛔ Suspend account</option>
+        <option value="unsuspend">Restore account</option>
+        <option value="ban">🚫 Permanent ban</option>
+        <option value="unban">Unban</option>
+      </optgroup>
+      <optgroup label="Verification">
+        <option value="verify">✓ Verify researcher</option>
+        <option value="unverify">Remove verification</option>
+      </optgroup>
+      <optgroup label="Role Management">
+        <option value="set_role">👑 Change role</option>
+      </optgroup>
     </select></div>
     <div class="form-group" id="durationGroup" style="display:none"><label class="form-label">Duration (hours)</label><input class="form-input" id="modDuration" type="number" value="24" min="1"></div>
-    <div class="form-group" id="roleGroup" style="display:none"><label class="form-label">New Role</label><select class="form-select" id="modRole"><option value="user">User</option><option value="moderator">Moderator</option><option value="admin">Admin</option></select></div>
+    <div class="form-group" id="roleGroup" style="display:none"><label class="form-label">New Role</label><select class="form-select" id="modRole"><option value="member">👤 Member</option>
+                <option value="verified">✓ Verified</option>
+                <option value="premium">⭐ Premium</option>
+                <option value="pro">🚀 Pro</option>
+                <option value="content_creator">✍️ Content Creator</option>
+                <option value="support">🎧 Support</option>
+                <option value="moderator">🔨 Moderator</option>
+                <option value="admin">🛡️ Admin</option></select></div>
     <div class="form-group"><label class="form-label">Reason (optional)</label><textarea class="form-textarea" id="modReason" placeholder="Visible in moderation log…"></textarea></div>`;
 
   document.getElementById('modAction').addEventListener('change', (e) => {
@@ -962,7 +983,8 @@ function openUserModal(id, handle, name, status, role) {
     document.getElementById('roleGroup').style.display = e.target.value === 'set_role' ? '' : 'none';
   });
 
-  document.getElementById('userModalConfirm').onclick = async () => {
+  currentModalUserId = id;
+    document.getElementById('userModalConfirm').onclick = async () => {
     const action = document.getElementById('modAction').value;
     if (!action) return showToast('Select an action', true);
     const reason = document.getElementById('modReason').value;
@@ -1078,6 +1100,24 @@ async function reviewAttAdmin(attId, action) {
     await api('POST', '/attachments/' + attId + '/review', { action, reason });
     showToast(action === 'approve' ? '✅ Approved' : '❌ Rejected');
     loadAttachments();
+  } catch(e) { showToast('Failed: ' + e.message, true); }
+}
+
+let currentModalUserId = null;
+
+async function showRoleHistory(userId) {
+  if (!userId) return;
+  try {
+    const history = await api('GET', '/roles/history/' + userId);
+    if (!history.length) { showToast('No role changes on record'); return; }
+    const html = history.map(h => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--divider);font-size:12px;">
+        <span style="font-weight:700;">${h.old_role}</span> → <span style="font-weight:700;color:var(--primary)">${h.new_role}</span>
+        by @${esc(h.changed_by_handle)} · ${fmtDate(h.created_at)}
+        ${h.reason?`<div style="color:var(--muted);font-size:11px;">${esc(h.reason)}</div>`:''}
+      </div>`).join('');
+    document.getElementById('userModalBody').insertAdjacentHTML('beforeend',
+      `<div style="margin-top:16px;"><div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--muted);text-transform:uppercase;">Role History</div>${html}</div>`);
   } catch(e) { showToast('Failed: ' + e.message, true); }
 }
 

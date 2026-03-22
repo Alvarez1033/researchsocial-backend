@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { query } = require('../db/pool');
+const { hasPermission, roleLevel } = require('../config/roles');
 
 // Verify JWT from Authorization header or cookie
 async function requireAuth(req, res, next) {
@@ -46,7 +47,7 @@ async function optionalAuth(req, res, next) {
   next();
 }
 
-// Role guards
+// Role guards — now use permission-based system
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -57,9 +58,34 @@ function requireRole(...roles) {
   };
 }
 
-const requireMod = requireRole('moderator', 'admin', 'superadmin');
-const requireAdmin = requireRole('admin', 'superadmin');
+// Permission-based guards
+function requirePerm(permission) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    if (!hasPermission(req.user.role, permission)) {
+      return res.status(403).json({ error: 'Insufficient permissions', required: permission });
+    }
+    next();
+  };
+}
+
+// Legacy level-based guards (kept for compatibility)
+const requireMod = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  if (!hasPermission(req.user.role, 'admin.moderation')) return res.status(403).json({ error: 'Moderator access required' });
+  next();
+};
+const requireAdmin = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  if (!hasPermission(req.user.role, 'admin.settings')) return res.status(403).json({ error: 'Admin access required' });
+  next();
+};
 const requireSuperAdmin = requireRole('superadmin');
+const requireSupport = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  if (!hasPermission(req.user.role, 'admin.access')) return res.status(403).json({ error: 'Staff access required' });
+  next();
+};
 
 function extractToken(req) {
   if (req.headers.authorization?.startsWith('Bearer ')) {
@@ -79,4 +105,4 @@ function generateTokens(userId) {
   return { accessToken, refreshToken };
 }
 
-module.exports = { requireAuth, optionalAuth, requireRole, requireMod, requireAdmin, requireSuperAdmin, generateTokens, extractToken };
+module.exports = { requireAuth, optionalAuth, requireRole, requirePerm, requireMod, requireAdmin, requireSuperAdmin, requireSupport, generateTokens, extractToken };
