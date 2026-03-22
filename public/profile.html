@@ -748,9 +748,6 @@ function renderFriendsList(friends) {
         <a href="/profile/${esc(u.handle)}" style="font-size:12px;color:var(--pri);padding:6px 12px;border:1px solid var(--pri);border-radius:var(--r-full);transition:all var(--tr);"
            onmouseover="this.style.background='var(--pri-hl)'" onmouseout="this.style.background=''">View</a>
       </div>`).join('');
-  } catch(e) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Failed to load friends</div>';
-  }
 }
 
 // Also handle incoming friend requests — show a banner if any pending
