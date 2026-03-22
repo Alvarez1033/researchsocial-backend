@@ -255,7 +255,7 @@ h1,h2,h3,h4{text-wrap:balance;line-height:1.2;}
       <button class="feed-tab active" onclick="setTab('new',this)">For You</button>
       <button class="feed-tab" onclick="setTab('hot',this)">Trending</button>
       <button class="feed-tab" onclick="setTab('top',this)">Top</button>
-      <button class="feed-tab" onclick="setTab('following',this)">Following</button>
+      <button class="feed-tab" onclick="setTab('friends',this)">Friends</button>
     </div>
     <button class="btn-post" onclick="openNewPost()">+ New Post</button>
   </div>
@@ -447,7 +447,27 @@ function setTab(tab, btn) {
   currentTab = tab;
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  loadFeed(1);
+  if (tab === 'friends') {
+    if (!Auth.isLoggedIn()) { openAuth(); return; }
+    loadFriendsFeed(1);
+  } else {
+    loadFeed(1);
+  }
+}
+
+async function loadFriendsFeed(page=1) {
+  document.getElementById('feedContainer').innerHTML = skeletonCards(3);
+  try {
+    const data = await API.getFriendFeed(page);
+    if (!data.posts.length) {
+      document.getElementById('feedContainer').innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted)">No posts from friends yet.<br><small>Add friends from their profile pages.</small></div>';
+      return;
+    }
+    document.getElementById('feedContainer').innerHTML = data.posts.map(renderPost).join('');
+    attachPostListeners();
+  } catch(e) {
+    document.getElementById('feedContainer').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">Failed: ' + esc(e.message) + '</div>';
+  }
 }
 
 function skeletonCards(n) {

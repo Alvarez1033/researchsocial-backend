@@ -124,6 +124,19 @@ const API = {
   },
   async sendMessage(convId, body) { return apiFetch('POST', '/messages/conversations/' + convId + '/messages', { body }); },
 
+  // Friends
+  async getFriends() { return apiFetch('GET', '/friends'); },
+  async getFriendRequests() { return apiFetch('GET', '/friends/requests'); },
+  async getSentRequests() { return apiFetch('GET', '/friends/sent'); },
+  async getFriendStatus(handle) { return apiFetch('GET', '/friends/status/' + handle); },
+  async getUserFriends(handle) { return apiFetch('GET', '/friends/' + handle); },
+  async sendFriendRequest(handle) { return apiFetch('POST', '/friends/request/' + handle); },
+  async acceptFriendRequest(friendshipId) { return apiFetch('POST', '/friends/accept/' + friendshipId); },
+  async declineFriendRequest(friendshipId) { return apiFetch('POST', '/friends/decline/' + friendshipId); },
+  async removeFriend(handle) { return apiFetch('DELETE', '/friends/' + handle); },
+  async cancelFriendRequest(handle) { return apiFetch('DELETE', '/friends/cancel/' + handle); },
+  async getFriendFeed(page = 1) { return apiFetch('GET', '/friends/feed/posts?page=' + page); },
+
   // Tags
   async getTags(params = {}) {
     const q = new URLSearchParams(params).toString();

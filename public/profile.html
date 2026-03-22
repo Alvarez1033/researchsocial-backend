@@ -398,6 +398,9 @@ function renderProfile(user) {
             : `<button class="btn-follow-lg ${user.is_following?'following':''}" id="followBtn" onclick="toggleFollow()">
                 ${user.is_following ? '✓ Following' : '+ Follow'}
                </button>
+               <button class="btn-msg" id="friendBtn" onclick="handleFriendAction()" title="Friend request" style="border-radius:var(--r-full);border:1.5px solid var(--bdr);color:var(--muted);width:38px;height:38px;display:flex;align-items:center;justify-content:center;transition:all var(--tr);flex-shrink:0;">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+               </button>
                <a href="/messages?with=${esc(user.id)}" class="btn-msg" title="Message @${esc(user.handle)}">
                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                </a>`}
@@ -435,6 +438,7 @@ function renderProfile(user) {
   <div>
     <div class="sec-tabs">
       <button class="sec-tab active" onclick="showTab('posts',this)">Posts (${posts.length})</button>
+      <button class="sec-tab" onclick="showTab('friends',this);loadFriendsTab('${esc(user.handle)}');">Friends</button>
       <button class="sec-tab" onclick="showTab('about',this)">About</button>
     </div>
 
@@ -465,6 +469,11 @@ function renderProfile(user) {
         <div style="font-weight:600;margin-bottom:6px;">No posts yet</div>
         <div style="font-size:13px;">${isMe ? 'Share your first research post from the feed.' : '@'+esc(user.handle)+' hasn\'t posted yet.'}</div>
       </div>`}
+    </div>
+
+    <!-- Friends tab -->
+    <div class="tab-panel" id="tab-friends">
+      <div id="friendsTabContent"><div style="text-align:center;padding:40px;color:var(--muted)">Loading friends…</div></div>
     </div>
 
     <!-- About tab -->
@@ -618,8 +627,142 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeEdit();
 });
 
+
+// ── Friend system ─────────────────────────────────────────────────────────────
+let friendStatus = 'none';
+let friendshipId = null;
+
+async function loadFriendStatus() {
+  if (!me) return;
+  const isMe = me.handle === HANDLE;
+  if (isMe) return;
+  try {
+    const res = await API.getFriendStatus(HANDLE);
+    friendStatus = res.status;
+    friendshipId = res.friendship_id;
+    updateFriendBtn();
+  } catch(_) {}
+}
+
+function updateFriendBtn() {
+  const btn = document.getElementById('friendBtn');
+  if (!btn) return;
+  const map = {
+    none:             { title: 'Add Friend', color: 'var(--muted)',  border: 'var(--bdr)' },
+    request_sent:     { title: 'Cancel Request', color: 'var(--warn)', border: 'var(--warn)' },
+    request_received: { title: 'Accept Request', color: 'var(--suc)',  border: 'var(--suc)' },
+    friends:          { title: 'Friends ✓',      color: 'var(--pri)',  border: 'var(--pri)' },
+  };
+  const s = map[friendStatus] || map.none;
+  btn.title = s.title;
+  btn.style.color = s.color;
+  btn.style.borderColor = s.border;
+}
+
+async function handleFriendAction() {
+  if (!me) { showToast('Sign in to add friends'); return; }
+  try {
+    if (friendStatus === 'none') {
+      await API.sendFriendRequest(HANDLE);
+      friendStatus = 'request_sent';
+      showToast('Friend request sent to @' + HANDLE + '!');
+    } else if (friendStatus === 'request_sent') {
+      await API.cancelFriendRequest(HANDLE);
+      friendStatus = 'none';
+      showToast('Friend request cancelled');
+    } else if (friendStatus === 'request_received') {
+      if (friendshipId) {
+        await API.acceptFriendRequest(friendshipId);
+        friendStatus = 'friends';
+        showToast('You are now friends with @' + HANDLE + '!');
+      }
+    } else if (friendStatus === 'friends') {
+      if (confirm('Remove @' + HANDLE + ' as a friend?')) {
+        await API.removeFriend(HANDLE);
+        friendStatus = 'none';
+        showToast('Removed @' + HANDLE + ' as a friend');
+      }
+    }
+    updateFriendBtn();
+  } catch(e) { showToast('Failed: ' + e.message); }
+}
+
+async function loadFriendsTab(handle) {
+  const el = document.getElementById('friendsTabContent');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading...</div>';
+  try {
+    const friends = await API.getUserFriends(handle);
+    if (!friends.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div style="font-weight:600;margin-bottom:6px">No friends yet</div></div>';
+      return;
+    }
+    el.innerHTML = friends.map(u => `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);margin-bottom:10px;transition:all var(--tr);"
+           onmouseover="this.style.borderColor='var(--bdr)';this.style.boxShadow='var(--sh-card)'"
+           onmouseout="this.style.borderColor='var(--div)';this.style.boxShadow=''">
+        <a href="/profile/${esc(u.handle)}">${avatarSVG(u, 44)}</a>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;">
+            <a href="/profile/${esc(u.handle)}" style="transition:color var(--tr);"
+               onmouseover="this.style.color='var(--pri)'" onmouseout="this.style.color=''"
+            >${esc(u.name)}</a>
+            ${u.is_verified ? '<span style="color:var(--pri);font-size:11px" title="Verified">✓</span>' : ''}
+          </div>
+          <div style="font-size:12px;color:var(--muted);">@${esc(u.handle)}</div>
+          ${u.affiliation ? `<div style="font-size:11px;color:var(--faint);">${esc(u.affiliation)}</div>` : ''}
+        </div>
+        <a href="/profile/${esc(u.handle)}" style="font-size:12px;color:var(--pri);padding:6px 12px;border:1px solid var(--pri);border-radius:var(--r-full);transition:all var(--tr);"
+           onmouseover="this.style.background='var(--pri-hl)'" onmouseout="this.style.background=''">View</a>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Failed to load friends</div>';
+  }
+}
+
+// Also handle incoming friend requests — show a banner if any pending
+async function loadPendingRequests() {
+  if (!me || me.handle !== HANDLE) return;
+  try {
+    const requests = await API.getFriendRequests();
+    if (!requests.length) return;
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:var(--pri-hl);border:1px solid var(--pri);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;font-size:13px;';
+    banner.innerHTML = `
+      <div style="font-weight:700;color:var(--pri);margin-bottom:8px;">
+        ${requests.length} pending friend request${requests.length>1?'s':''}
+      </div>
+      ${requests.slice(0,3).map(r => `
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--pri-hl);">
+          <a href="/profile/${esc(r.handle)}">${avatarSVG(r, 32)}</a>
+          <div style="flex:1"><div style="font-weight:600;">@${esc(r.handle)}</div><div style="font-size:11px;color:var(--muted)">${esc(r.affiliation||'')}</div></div>
+          <button onclick="acceptRequest('${esc(r.friendship_id)}','${esc(r.handle)}',this)" style="padding:5px 12px;background:var(--suc);color:#0d2b0d;border-radius:var(--r-full);font-size:11px;font-weight:700;transition:all var(--tr);">Accept</button>
+          <button onclick="declineRequest('${esc(r.friendship_id)}',this)" style="padding:5px 12px;border:1px solid var(--bdr);border-radius:var(--r-full);font-size:11px;font-weight:600;color:var(--muted);transition:all var(--tr);">Decline</button>
+        </div>`).join('')}
+    `;
+    const grid = document.getElementById('profileGrid');
+    grid.insertAdjacentElement('beforebegin', banner);
+  } catch(_) {}
+}
+
+async function acceptRequest(id, handle, btn) {
+  try {
+    await API.acceptFriendRequest(id);
+    btn.closest('div[style*="border-bottom"]').style.opacity = '0.5';
+    showToast('You are now friends with @' + handle + '!');
+    setTimeout(() => btn.closest('div[style*="border-bottom"]')?.remove(), 500);
+  } catch(e) { showToast('Failed: ' + e.message); }
+}
+
+async function declineRequest(id, btn) {
+  try {
+    await API.declineFriendRequest(id);
+    btn.closest('div[style*="border-bottom"]').style.opacity = '0.5';
+    setTimeout(() => btn.closest('div[style*="border-bottom"]')?.remove(), 500);
+  } catch(e) { showToast('Failed: ' + e.message); }
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
-loadProfile();
+loadProfile().then(() => { loadFriendStatus(); loadPendingRequests(); });
 </script>
 </body>
 </html>
