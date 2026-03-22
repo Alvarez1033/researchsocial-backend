@@ -70,6 +70,7 @@ echo ""
 echo "🗄️  Running database migrations..."
 node src/db/roles.js
 node src/db/attachments.js
+node src/db/friends.js
 
 echo ""
 echo "✅ Sync complete! Now run: npm run dev"
