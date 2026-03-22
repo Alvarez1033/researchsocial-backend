@@ -1062,7 +1062,6 @@ async function loadAttachments() {
     el.innerHTML = atts.map(att => `
       <div class="card" style="margin-bottom:12px;">
         <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
-          <!-- Preview -->
           <div style="flex-shrink:0;">
             ${att.type === 'link'
               ? `<div style="width:120px;height:80px;background:var(--surface3);border-radius:var(--r-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);">
@@ -1072,7 +1071,6 @@ async function loadAttachments() {
               : `<img src="${att.url}" style="width:120px;height:80px;object-fit:cover;border-radius:var(--r-lg);border:1px solid var(--border);" onerror="this.src='';">`
             }
           </div>
-          <!-- Info -->
           <div style="flex:1;min-width:0;">
             <div style="font-size:14px;font-weight:700;margin-bottom:4px;">
               <span class="badge badge-info">${att.type}</span>
@@ -1084,7 +1082,6 @@ async function loadAttachments() {
             ${att.url ? `<div style="font-size:11px;color:var(--muted);margin-bottom:4px;word-break:break-all;">${esc(att.url.slice(0,80))}</div>` : ''}
             ${att.caption ? `<div style="font-size:12px;color:var(--muted);font-style:italic;">"${esc(att.caption)}"</div>` : ''}
           </div>
-          <!-- Actions -->
           <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
             <button class="btn btn-success" onclick="reviewAttAdmin('${att.id}','approve')">✓ Approve</button>
             <button class="btn btn-error" onclick="reviewAttAdmin('${att.id}','reject')">✕ Reject</button>
