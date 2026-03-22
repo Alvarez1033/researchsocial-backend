@@ -187,6 +187,36 @@ router.post('/:id/bookmark', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/posts/bookmarks — get current user's bookmarked posts
+router.get('/bookmarks', requireAuth, async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+    const result = await query(`
+      SELECT p.id, p.title, p.excerpt, p.type, p.status, p.likes_count, p.comments_count,
+             p.views_count, p.is_pinned, p.is_featured, p.created_at, p.structured_body,
+             u.id as author_id, u.handle as author_handle, u.name as author_name,
+             u.avatar_url as author_avatar, u.color as author_color,
+             u.initials as author_initials, u.is_verified as author_verified,
+             u.affiliation as author_affiliation,
+             b.created_at as bookmarked_at,
+             COALESCE(json_agg(DISTINCT jsonb_build_object('name',t.name,'slug',t.slug,'color',t.color)) FILTER (WHERE t.id IS NOT NULL),'[]') as tags
+      FROM bookmarks b
+      JOIN posts p ON p.id = b.post_id
+      JOIN users u ON u.id = p.author_id
+      LEFT JOIN post_tags pt ON pt.post_id = p.id
+      LEFT JOIN tags t ON t.id = pt.tag_id
+      WHERE b.user_id = $1
+      GROUP BY p.id, u.id, b.created_at
+      ORDER BY b.created_at DESC
+      LIMIT $2 OFFSET $3
+    `, [req.user.id, parseInt(limit), offset]);
+
+    const count = await query('SELECT COUNT(*) FROM bookmarks WHERE user_id = $1', [req.user.id]);
+    res.json({ posts: result.rows, total: parseInt(count.rows[0].count), page: parseInt(page) });
+  } catch (err) { next(err); }
+});
+
 // GET /api/posts/:id/comments
 router.get('/:id/comments', optionalAuth, async (req, res, next) => {
   try {

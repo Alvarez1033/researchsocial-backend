@@ -179,7 +179,7 @@ async function loadTrending() {
     const data = await API.getFeed({ page: 1, limit: 8, sort: 'new' });
     if (!data.posts.length) { postsEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--faint)">No posts yet.</div>'; return; }
     postsEl.innerHTML = data.posts.map(p => `
-      <a href="/" class="post-result" style="display:flex;flex-direction:column;padding:14px 16px;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);margin-bottom:8px;cursor:pointer;transition:all var(--tr);text-decoration:none;"
+      <a href="/post/${p.id}" class="post-result" style="display:flex;flex-direction:column;padding:14px 16px;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);margin-bottom:8px;cursor:pointer;transition:all var(--tr);text-decoration:none;"
          onmouseover="this.style.borderColor='var(--bdr)';this.style.transform='translateY(-1px)';this.style.boxShadow='var(--sh-card)'"
          onmouseout="this.style.borderColor='var(--div)';this.style.transform='';this.style.boxShadow=''">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">

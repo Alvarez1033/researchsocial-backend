@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post — ResearchSocial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--text-xs:clamp(.75rem,.7rem+.25vw,.875rem);--text-sm:clamp(.875rem,.8rem+.35vw,1rem);--text-base:clamp(1rem,.95rem+.25vw,1.125rem);--text-lg:clamp(1.125rem,1rem+.75vw,1.5rem);--s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--s10:2.5rem;--s12:3rem;--s16:4rem;--r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-2xl:1.5rem;--r-full:9999px;--tr:180ms cubic-bezier(.16,1,.3,1);--font:'Inter',sans-serif;--font-d:'DM Serif Display',Georgia,serif;}
+:root,[data-theme="light"]{--bg:#f0f2f5;--surface:#fff;--surface2:#f8f9fa;--off:#eef0f3;--dyn:#e2e5ea;--div:#dde0e5;--bdr:#cdd1d8;--text:#1a1d23;--muted:#636878;--faint:#a8adb8;--inv:#fff;--pri:#4f46e5;--pri-h:#3730a3;--pri-hl:#e0e7ff;--suc:#16a34a;--err:#dc2626;--warn:#d97706;--sh-sm:0 1px 3px rgba(0,0,0,.08);--sh-md:0 4px 16px rgba(0,0,0,.1);--sh-card:0 2px 8px rgba(0,0,0,.06);}
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--off:#21262d;--dyn:#2d333b;--div:#30363d;--bdr:#3d444d;--text:#e6edf3;--muted:#8b949e;--faint:#484f58;--inv:#0d1117;--pri:#818cf8;--pri-h:#a5b4fc;--pri-hl:#1e1b4b;--suc:#4ade80;--err:#f87171;--warn:#fbbf24;--sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 16px rgba(0,0,0,.4);--sh-card:0 2px 8px rgba(0,0,0,.25);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+body{min-height:100dvh;font-family:var(--font);font-size:var(--text-base);color:var(--text);background:var(--bg);}
+img,svg{display:block;max-width:100%;}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;}
+a{color:inherit;text-decoration:none;}
+input,textarea{font:inherit;color:inherit;}
+:focus-visible{outline:2px solid var(--pri);outline-offset:3px;border-radius:var(--r-sm);}
+
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--div);position:sticky;top:0;z-index:100;}
+.nav-left{display:flex;align-items:center;gap:16px;}
+.nav-back{display:flex;align-items:center;gap:6px;font-size:var(--text-sm);font-weight:500;color:var(--muted);padding:6px 12px;border-radius:var(--r-md);transition:all var(--tr);}
+.nav-back:hover{background:var(--off);color:var(--text);}
+.nav-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:var(--text-lg);font-weight:700;}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.btn-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-full);color:var(--muted);transition:all var(--tr);}
+.btn-icon:hover{background:var(--off);color:var(--text);}
+
+.page{max-width:780px;margin:0 auto;padding:32px 24px 80px;}
+
+.post-card{background:var(--surface);border:1px solid var(--div);border-radius:var(--r-2xl);padding:32px;box-shadow:var(--sh-card);}
+
+.author-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.author-info{flex:1;}
+.author-name{font-size:15px;font-weight:700;}
+.author-handle{font-size:13px;color:var(--muted);}
+.author-aff{font-size:12px;color:var(--pri);margin-top:2px;}
+
+.type-badge{display:inline-flex;font-size:11px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;}
+.b-proposal{background:#dbeafe;color:#1d4ed8;}[data-theme="dark"] .b-proposal{background:#1e3a5f;color:#60a5fa;}
+.b-study{background:#d1fae5;color:#065f46;}[data-theme="dark"] .b-study{background:#14532d;color:#34d399;}
+.b-review{background:#fef3c7;color:#92400e;}[data-theme="dark"] .b-review{background:#451a03;color:#fbbf24;}
+.b-findings{background:#ede9fe;color:#5b21b6;}[data-theme="dark"] .b-findings{background:#2e1065;color:#a78bfa;}
+.b-discussion{background:#f1f5f9;color:#374151;}[data-theme="dark"] .b-discussion{background:#1f2937;color:#9ca3af;}
+
+.post-title{font-family:var(--font-d);font-size:clamp(1.4rem,4vw,2rem);font-weight:700;line-height:1.3;margin-bottom:12px;}
+.post-excerpt{font-size:var(--text-base);color:var(--muted);line-height:1.7;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--div);}
+
+.structured-section{margin-bottom:20px;}
+.structured-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:8px;}
+.structured-content{font-size:var(--text-sm);line-height:1.75;color:var(--text);}
+
+.post-tags{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0;}
+.tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:var(--r-full);}
+
+.post-actions{display:flex;align-items:center;gap:8px;padding:16px 0;border-top:1px solid var(--div);margin-top:16px;}
+.action-btn{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r-full);font-size:13px;font-weight:500;color:var(--muted);border:1.5px solid transparent;transition:all var(--tr);}
+.action-btn:hover{background:var(--off);color:var(--text);}
+.action-btn.liked{color:var(--err);}
+.action-btn.liked svg{fill:currentColor;}
+.action-btn.bookmarked{color:var(--pri);}
+.action-btn.bookmarked svg{fill:currentColor;}
+
+.comments-section{margin-top:28px;}
+.comments-title{font-size:15px;font-weight:700;margin-bottom:16px;}
+.comment{display:flex;gap:10px;margin-bottom:14px;}
+.comment-body{flex:1;background:var(--off);border-radius:var(--r-lg);padding:10px 14px;}
+.comment-author{font-size:13px;font-weight:700;margin-bottom:4px;}
+.comment-text{font-size:13px;color:var(--muted);line-height:1.6;}
+.comment-time{font-size:11px;color:var(--faint);margin-top:4px;}
+
+.comment-input-row{display:flex;gap:10px;margin-top:16px;align-items:flex-start;}
+.comment-input{flex:1;background:var(--off);border:1.5px solid var(--bdr);border-radius:var(--r-lg);padding:10px 14px;font-size:13px;resize:none;min-height:60px;transition:all var(--tr);}
+.comment-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-hl);}
+.btn-submit{padding:10px 18px;background:var(--pri);color:white;border-radius:var(--r-lg);font-size:13px;font-weight:700;transition:all var(--tr);white-space:nowrap;}
+.btn-submit:hover{opacity:.9;}
+
+.skeleton{background:var(--dyn);border-radius:var(--r-md);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+@media(max-width:600px){.page{padding:16px 12px 60px;}.post-card{padding:20px;border-radius:var(--r-xl);}}</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/" class="nav-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Feed
+    </a>
+    <a href="/" class="nav-logo">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="var(--pri)"/><circle cx="11" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none"/><circle cx="21" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".6"/><circle cx="16" cy="21" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".8"/></svg>
+      ResearchSocial
+    </a>
+  </div>
+  <div class="nav-right">
+    <button class="btn-icon" data-theme-toggle>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+  <div id="postContent">
+    <div class="post-card">
+      <div class="skeleton" style="height:20px;width:80px;margin-bottom:20px;"></div>
+      <div class="skeleton" style="height:40px;width:90%;margin-bottom:12px;"></div>
+      <div class="skeleton" style="height:16px;width:100%;margin-bottom:6px;"></div>
+      <div class="skeleton" style="height:16px;width:75%;margin-bottom:24px;"></div>
+      <div class="skeleton" style="height:14px;width:50%;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/api.js"></script>
+<script>
+(function(){
+  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=localStorage.getItem('rs_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  r.setAttribute('data-theme',d);upd(d);
+  t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);localStorage.setItem('rs_theme',d);upd(d);});
+  function upd(v){t.innerHTML=v==='dark'?`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;}
+})();
+
+const POST_ID = window.location.pathname.split('/').filter(Boolean).pop();
+const me = Auth.getUser();
+let postData = null;
+
+async function loadPost() {
+  try {
+    const post = await API.getPost(POST_ID);
+    postData = post;
+    document.title = post.title + ' — ResearchSocial';
+    renderPost(post);
+    loadComments();
+  } catch(e) {
+    document.getElementById('postContent').innerHTML = `
+      <div style="text-align:center;padding:80px;color:var(--muted)">
+        <div style="font-size:40px;margin-bottom:12px">📄</div>
+        <div style="font-weight:700;margin-bottom:6px">Post not found</div>
+        <div style="font-size:13px">${esc(e.message)}</div>
+        <a href="/" style="display:inline-block;margin-top:16px;color:var(--pri);font-weight:600;">← Back to feed</a>
+      </div>`;
+  }
+}
+
+function renderPost(p) {
+  const tags = Array.isArray(p.tags) ? p.tags.filter(t=>t&&t.name) : [];
+  const sb = p.structured_body || {};
+  const sbKeys = Object.keys(sb).filter(k => sb[k]);
+
+  const structuredHTML = sbKeys.length ? sbKeys.map(k => `
+    <div class="structured-section">
+      <div class="structured-label">${esc(k.replace(/_/g,' '))}</div>
+      <div class="structured-content">${esc(sb[k])}</div>
+    </div>`).join('') : '';
+
+  document.getElementById('postContent').innerHTML = `
+    <div class="post-card">
+      <div class="author-row">
+        <a href="/profile/${esc(p.author_handle)}">${avatarSVG({color:p.author_color,initials:p.author_initials,avatar_url:p.author_avatar,name:p.author_name},44)}</a>
+        <div class="author-info">
+          <div class="author-name"><a href="/profile/${esc(p.author_handle)}" onmouseover="this.style.color='var(--pri)'" onmouseout="this.style.color=''">${esc(p.author_name)}</a>${p.author_verified?'<span style="color:var(--pri);font-size:12px;margin-left:4px" title="Verified">✓</span>':''}</div>
+          <div class="author-handle">@${esc(p.author_handle)} · ${fmtTime(p.created_at)}</div>
+          ${p.author_affiliation?`<div class="author-aff">${esc(p.author_affiliation)}</div>`:''}
+        </div>
+        ${roleBadgeHTML(p.author_role||'')}
+      </div>
+
+      <span class="type-badge b-${p.type}">${p.type}</span>
+      <h1 class="post-title">${esc(p.title)}</h1>
+      <p class="post-excerpt">${esc(p.excerpt)}</p>
+
+      ${structuredHTML}
+
+      ${tags.length ? `<div class="post-tags">${tags.map(t=>`<span class="tag" style="background:${t.color||'#818cf8'}22;color:${t.color||'#818cf8'}">#${esc(t.name)}</span>`).join('')}</div>` : ''}
+
+      <div class="post-actions">
+        <button class="action-btn like-btn ${p.liked?'liked':''}" id="likeBtn" onclick="doLike()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="${p.liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span id="likeCount">${fmtNum(p.likes_count)}</span>
+        </button>
+        <button class="action-btn" onclick="document.getElementById('commentInput').focus()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span id="commentCount">${fmtNum(p.comments_count)}</span>
+        </button>
+        <button class="action-btn bookmark-btn ${p.bookmarked?'bookmarked':''}" id="bookmarkBtn" onclick="doBookmark()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="${p.bookmarked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          ${p.bookmarked?'Saved':'Save'}
+        </button>
+        <button class="action-btn" onclick="copyLink()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+      </div>
+    </div>
+
+    <div class="comments-section post-card" style="margin-top:16px;">
+      <div class="comments-title">Comments <span id="commentCountBadge" style="color:var(--muted);font-size:13px;font-weight:400;">(${p.comments_count})</span></div>
+      <div id="commentsList"></div>
+      ${me ? `
+      <div class="comment-input-row">
+        ${avatarSVG(me, 36)}
+        <textarea class="comment-input" id="commentInput" placeholder="Share your thoughts…" rows="2"></textarea>
+        <button class="btn-submit" onclick="submitComment()">Post</button>
+      </div>` : `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;"><a href="/" style="color:var(--pri);font-weight:600;">Sign in</a> to leave a comment.</div>`}
+    </div>`;
+}
+
+async function doLike() {
+  if (!me) { showToast('Sign in to like posts'); return; }
+  try {
+    const res = await API.likePost(POST_ID);
+    const btn = document.getElementById('likeBtn');
+    btn.classList.toggle('liked', res.liked);
+    btn.querySelector('svg').setAttribute('fill', res.liked ? 'currentColor' : 'none');
+    document.getElementById('likeCount').textContent = fmtNum(res.count);
+  } catch(e) { showToast('⚠️ ' + e.message); }
+}
+
+async function doBookmark() {
+  if (!me) { showToast('Sign in to save posts'); return; }
+  try {
+    const res = await API.bookmarkPost(POST_ID);
+    const btn = document.getElementById('bookmarkBtn');
+    btn.classList.toggle('bookmarked', res.bookmarked);
+    btn.querySelector('svg').setAttribute('fill', res.bookmarked ? 'currentColor' : 'none');
+    btn.childNodes[btn.childNodes.length-1].textContent = res.bookmarked ? 'Saved' : 'Save';
+    showToast(res.bookmarked ? '🔖 Saved to library' : 'Removed from library');
+  } catch(e) { showToast('⚠️ ' + e.message); }
+}
+
+function copyLink() {
+  navigator.clipboard?.writeText(window.location.href).then(() => showToast('🔗 Link copied!'));
+}
+
+async function loadComments() {
+  const el = document.getElementById('commentsList');
+  if (!el) return;
+  try {
+    const comments = await API.getComments(POST_ID);
+    if (!comments.length) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--faint);font-size:13px;">No comments yet. Be the first!</div>';
+      return;
+    }
+    el.innerHTML = comments.map(c => `
+      <div class="comment">
+        <a href="/profile/${esc(c.author_handle)}">${avatarSVG({color:c.author_color,initials:c.author_initials,avatar_url:c.author_avatar},34)}</a>
+        <div class="comment-body">
+          <div class="comment-author"><a href="/profile/${esc(c.author_handle)}" onmouseover="this.style.color='var(--pri)'" onmouseout="this.style.color=''">@${esc(c.author_handle)}</a></div>
+          <div class="comment-text">${esc(c.body)}</div>
+          <div class="comment-time">${fmtTime(c.created_at)}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { if(el) el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px;">Failed to load comments.</div>'; }
+}
+
+async function submitComment() {
+  if (!me) return;
+  const input = document.getElementById('commentInput');
+  const body = input.value.trim();
+  if (!body) return;
+  try {
+    const comment = await API.addComment(POST_ID, body);
+    input.value = '';
+    const el = document.getElementById('commentsList');
+    const empty = el.querySelector('div[style*="No comments"]');
+    if (empty) empty.remove();
+    el.insertAdjacentHTML('beforeend', `
+      <div class="comment">
+        <a href="/profile/${esc(me.handle)}">${avatarSVG(me, 34)}</a>
+        <div class="comment-body">
+          <div class="comment-author"><a href="/profile/${esc(me.handle)}">@${esc(me.handle)}</a></div>
+          <div class="comment-text">${esc(comment.body)}</div>
+          <div class="comment-time">Just now</div>
+        </div>
+      </div>`);
+    const cnt = document.getElementById('commentCount');
+    const badge = document.getElementById('commentCountBadge');
+    if (cnt) cnt.textContent = parseInt(cnt.textContent||'0') + 1;
+    if (badge) badge.textContent = '(' + (parseInt(badge.textContent.replace(/\D/g,''))+1) + ')';
+    showToast('💬 Comment posted!');
+  } catch(e) { showToast('⚠️ ' + e.message); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) {
+    const input = document.getElementById('commentInput');
+    if (document.activeElement === input) submitComment();
+  }
+});
+
+loadPost();
+</script>
+</body>
+</html>

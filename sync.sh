@@ -57,6 +57,8 @@ curl -sf "$BASE/public/messages.html" -o public/messages.html && echo "✓ publi
 curl -sf "$BASE/public/notifications.html" -o public/notifications.html && echo "✓ public/notifications.html"
 curl -sf "$BASE/public/search.html" -o public/search.html && echo "✓ public/search.html"
 curl -sf "$BASE/public/network.html" -o public/network.html && echo "✓ public/network.html"
+curl -sf "$BASE/public/post.html" -o public/post.html && echo "✓ public/post.html"
+curl -sf "$BASE/public/library.html" -o public/library.html && echo "✓ public/library.html"
 
 # Admin panel
 curl -sf "$BASE/public/admin/index.html" -o public/admin/index.html && echo "✓ public/admin/index.html"

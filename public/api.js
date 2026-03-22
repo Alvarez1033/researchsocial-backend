@@ -104,6 +104,7 @@ const API = {
   async createPost(data) { return apiFetch('POST', '/posts', data); },
   async likePost(id) { return apiFetch('POST', '/posts/' + id + '/like'); },
   async bookmarkPost(id) { return apiFetch('POST', '/posts/' + id + '/bookmark'); },
+  async getBookmarks(page = 1) { return apiFetch('GET', '/posts/bookmarks?page=' + page); },
   async getComments(postId) { return apiFetch('GET', '/posts/' + postId + '/comments'); },
   async addComment(postId, body, parentId) { return apiFetch('POST', '/posts/' + postId + '/comments', { body, parentId }); },
 

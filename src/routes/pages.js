@@ -10,5 +10,7 @@ router.get('/messages/:id', (req, res) => res.sendFile(pub('messages.html')));
 router.get('/notifications', (req, res) => res.sendFile(pub('notifications.html')));
 router.get('/search', (req, res) => res.sendFile(pub('search.html')));
 router.get('/network', (req, res) => res.sendFile(pub('network.html')));
+router.get('/library', (req, res) => res.sendFile(pub('library.html')));
+router.get('/post/:id', (req, res) => res.sendFile(pub('post.html')));
 
 module.exports = router;

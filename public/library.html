@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library — ResearchSocial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--text-xs:clamp(.75rem,.7rem+.25vw,.875rem);--text-sm:clamp(.875rem,.8rem+.35vw,1rem);--text-base:clamp(1rem,.95rem+.25vw,1.125rem);--text-lg:clamp(1.125rem,1rem+.75vw,1.5rem);--s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-2xl:1.5rem;--r-full:9999px;--tr:180ms cubic-bezier(.16,1,.3,1);--font:'Inter',sans-serif;--font-d:'DM Serif Display',Georgia,serif;}
+:root,[data-theme="light"]{--bg:#f0f2f5;--surface:#fff;--off:#eef0f3;--dyn:#e2e5ea;--div:#dde0e5;--bdr:#cdd1d8;--text:#1a1d23;--muted:#636878;--faint:#a8adb8;--inv:#fff;--pri:#4f46e5;--pri-h:#3730a3;--pri-hl:#e0e7ff;--suc:#16a34a;--err:#dc2626;--warn:#d97706;--sh-sm:0 1px 3px rgba(0,0,0,.08);--sh-card:0 2px 8px rgba(0,0,0,.06);}
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--off:#21262d;--dyn:#2d333b;--div:#30363d;--bdr:#3d444d;--text:#e6edf3;--muted:#8b949e;--faint:#484f58;--inv:#0d1117;--pri:#818cf8;--pri-h:#a5b4fc;--pri-hl:#1e1b4b;--suc:#4ade80;--err:#f87171;--warn:#fbbf24;--sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-card:0 2px 8px rgba(0,0,0,.25);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+body{min-height:100dvh;font-family:var(--font);color:var(--text);background:var(--bg);}
+img,svg{display:block;max-width:100%;}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--pri);outline-offset:3px;border-radius:var(--r-sm);}
+
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--div);position:sticky;top:0;z-index:100;}
+.nav-left{display:flex;align-items:center;gap:16px;}
+.nav-back{display:flex;align-items:center;gap:6px;font-size:var(--text-sm);font-weight:500;color:var(--muted);padding:6px 12px;border-radius:var(--r-md);transition:all var(--tr);}
+.nav-back:hover{background:var(--off);color:var(--text);}
+.nav-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:var(--text-lg);font-weight:700;}
+.btn-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-full);color:var(--muted);transition:all var(--tr);}
+.btn-icon:hover{background:var(--off);color:var(--text);}
+
+.page{max-width:740px;margin:0 auto;padding:32px 24px 80px;}
+.page-hdr{margin-bottom:24px;}
+.page-title{font-family:var(--font-d);font-size:clamp(1.4rem,4vw,1.8rem);font-weight:700;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--muted);}
+
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.filter-btn{padding:5px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;color:var(--muted);border:1.5px solid var(--bdr);transition:all var(--tr);}
+.filter-btn:hover{border-color:var(--pri);color:var(--pri);}
+.filter-btn.active{border-color:var(--pri);color:var(--pri);background:var(--pri-hl);}
+
+.post-card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);padding:16px 18px;margin-bottom:10px;transition:all var(--tr);}
+.post-card:hover{border-color:var(--bdr);box-shadow:var(--sh-card);transform:translateY(-1px);}
+.post-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.type-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--r-full);letter-spacing:.04em;text-transform:uppercase;}
+.b-proposal{background:#dbeafe;color:#1d4ed8;}[data-theme="dark"] .b-proposal{background:#1e3a5f;color:#60a5fa;}
+.b-study{background:#d1fae5;color:#065f46;}[data-theme="dark"] .b-study{background:#14532d;color:#34d399;}
+.b-review{background:#fef3c7;color:#92400e;}[data-theme="dark"] .b-review{background:#451a03;color:#fbbf24;}
+.b-findings{background:#ede9fe;color:#5b21b6;}[data-theme="dark"] .b-findings{background:#2e1065;color:#a78bfa;}
+.b-discussion{background:#f1f5f9;color:#374151;}[data-theme="dark"] .b-discussion{background:#1f2937;color:#9ca3af;}
+
+.post-title{font-family:var(--font-d);font-size:15px;font-weight:700;margin-bottom:4px;line-height:1.3;}
+.post-title a:hover{color:var(--pri);}
+.post-excerpt{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.post-footer{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.post-meta{font-size:11px;color:var(--faint);display:flex;align-items:center;gap:8px;flex:1;}
+.btn-unsave{padding:4px 12px;border-radius:var(--r-full);font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--bdr);transition:all var(--tr);}
+.btn-unsave:hover{border-color:var(--err);color:var(--err);}
+
+.empty{text-align:center;padding:80px 20px;color:var(--faint);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.skeleton{background:var(--dyn);border-radius:var(--r-md);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+.site-footer{text-align:center;padding:24px;font-size:12px;color:var(--faint);border-top:1px solid var(--div);}
+.site-footer a{color:var(--pri);}
+@media(max-width:600px){.page{padding:16px 12px 60px;}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/" class="nav-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Feed
+    </a>
+    <a href="/" class="nav-logo">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="var(--pri)"/><circle cx="11" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none"/><circle cx="21" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".6"/><circle cx="16" cy="21" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".8"/></svg>
+      ResearchSocial
+    </a>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="btn-icon" data-theme-toggle>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-hdr">
+    <div class="page-title">🔖 Library</div>
+    <div class="page-sub">Posts you've saved for later</div>
+  </div>
+
+  <div class="filter-row" id="filterRow">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('proposal',this)">Proposals</button>
+    <button class="filter-btn" onclick="setFilter('study',this)">Studies</button>
+    <button class="filter-btn" onclick="setFilter('findings',this)">Findings</button>
+    <button class="filter-btn" onclick="setFilter('review',this)">Reviews</button>
+    <button class="filter-btn" onclick="setFilter('discussion',this)">Discussions</button>
+  </div>
+
+  <div id="bookmarkList"></div>
+</div>
+
+<footer class="site-footer"><a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a></footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/api.js"></script>
+<script>
+(function(){
+  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=localStorage.getItem('rs_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  r.setAttribute('data-theme',d);upd(d);
+  t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);localStorage.setItem('rs_theme',d);upd(d);});
+  function upd(v){t.innerHTML=v==='dark'?`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;}
+})();
+
+const me = Auth.getUser();
+let allBookmarks = [];
+let currentFilter = 'all';
+
+if (!me) {
+  document.getElementById('bookmarkList').innerHTML = `
+    <div class="empty">
+      <div class="empty-icon">🔒</div>
+      <div style="font-weight:700;margin-bottom:8px;">Sign in to view your library</div>
+      <a href="/" style="color:var(--pri);font-weight:600;">Go to feed →</a>
+    </div>`;
+} else {
+  loadBookmarks();
+}
+
+async function loadBookmarks() {
+  const el = document.getElementById('bookmarkList');
+  el.innerHTML = [1,2,3].map(()=>`<div class="skeleton" style="height:120px;border-radius:var(--r-xl);margin-bottom:10px;"></div>`).join('');
+  try {
+    const data = await API.getBookmarks();
+    allBookmarks = data.posts || [];
+    render();
+  } catch(e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div>${esc(e.message)}</div></div>`;
+  }
+}
+
+function setFilter(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function render() {
+  const el = document.getElementById('bookmarkList');
+  const posts = currentFilter === 'all' ? allBookmarks : allBookmarks.filter(p => p.type === currentFilter);
+
+  if (!posts.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔖</div><div style="font-weight:700;margin-bottom:6px;">${currentFilter==='all'?'No saved posts yet':'No '+currentFilter+' posts saved'}</div><div style="font-size:13px;">Bookmark posts from the feed to save them here.</div><a href="/" style="display:inline-block;margin-top:14px;color:var(--pri);font-weight:600;">Browse feed →</a></div>`;
+    return;
+  }
+
+  el.innerHTML = posts.map(p => {
+    const tags = Array.isArray(p.tags) ? p.tags.filter(t=>t&&t.name) : [];
+    return `
+    <div class="post-card" id="bookmark_${p.id}">
+      <div class="post-card-hdr">
+        <span class="type-badge b-${p.type}">${p.type}</span>
+        <div style="display:flex;align-items:center;gap:6px;">${avatarSVG({color:p.author_color,initials:p.author_initials,avatar_url:p.author_avatar},18)}<a href="/profile/${esc(p.author_handle)}" style="font-size:12px;color:var(--muted);font-weight:600;">@${esc(p.author_handle)}</a></div>
+      </div>
+      <a href="/post/${esc(p.id)}" class="post-title" style="display:block;margin-bottom:4px;transition:color var(--tr);" onmouseover="this.style.color='var(--pri)'" onmouseout="this.style.color=''">${esc(p.title)}</a>
+      <div class="post-excerpt">${esc(p.excerpt)}</div>
+      ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${tags.slice(0,4).map(t=>`<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:9999px;background:${t.color||'#818cf8'}22;color:${t.color||'#818cf8'}">#${esc(t.name)}</span>`).join('')}</div>` : ''}
+      <div class="post-footer">
+        <div class="post-meta">
+          <span>❤️ ${fmtNum(p.likes_count)}</span>
+          <span>💬 ${fmtNum(p.comments_count)}</span>
+          <span>Saved ${fmtTime(p.bookmarked_at)}</span>
+        </div>
+        <button class="btn-unsave" onclick="unsave('${esc(p.id)}', this)">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function unsave(postId, btn) {
+  try {
+    await API.bookmarkPost(postId);
+    allBookmarks = allBookmarks.filter(p => p.id != postId);
+    document.getElementById('bookmark_' + postId)?.remove();
+    showToast('Removed from library');
+    if (!allBookmarks.filter(p => currentFilter==='all'||p.type===currentFilter).length) render();
+  } catch(e) { showToast('⚠️ ' + e.message); }
+}
+</script>
+</body>
+</html>

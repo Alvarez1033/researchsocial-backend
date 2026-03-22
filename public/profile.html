@@ -651,15 +651,16 @@ function updateFriendBtn() {
   const btn = document.getElementById('friendBtn');
   if (!btn) return;
   const map = {
-    none:             { title: 'Add Friend', color: 'var(--muted)',  border: 'var(--bdr)' },
-    request_sent:     { title: 'Cancel Request', color: 'var(--warn)', border: 'var(--warn)' },
-    request_received: { title: 'Accept Request', color: 'var(--suc)',  border: 'var(--suc)' },
-    friends:          { title: 'Friends ✓',      color: 'var(--pri)',  border: 'var(--pri)' },
+    none:             { html: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>', title: 'Add Friend',      color: 'var(--muted)', border: 'var(--bdr)' },
+    request_sent:     { html: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',             title: 'Cancel Request', color: 'var(--warn)', border: 'var(--warn)' },
+    request_received: { html: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',                                                                    title: 'Accept Request', color: 'var(--suc)',  border: 'var(--suc)' },
+    friends:          { html: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',                                                                    title: 'Friends ✓',      color: 'var(--pri)',  border: 'var(--pri)' },
   };
   const s = map[friendStatus] || map.none;
   btn.title = s.title;
   btn.style.color = s.color;
   btn.style.borderColor = s.border;
+  btn.innerHTML = s.html;
 }
 
 async function handleFriendAction() {
