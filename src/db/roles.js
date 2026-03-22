@@ -11,8 +11,8 @@ DO $$ BEGIN
   EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
--- Step 2: Copy existing data
-UPDATE users SET role_new = role::text WHERE role_new IS NULL OR role_new = 'member';
+-- Step 2: Copy existing data, mapping old 'user' role to 'member'
+UPDATE users SET role_new = CASE WHEN role::text = 'user' THEN 'member' ELSE role::text END;
 
 -- Step 3: Drop old column constraints and add check on new column
 DO $$ BEGIN
