@@ -30,7 +30,7 @@ const upload = multer({
   }
 });
 
-// GET /api/users — list users (public, paginated)
+// ─── GET /api/users — list users (public, paginated) ─────────────────────────
 router.get('/', optionalAuth, async (req, res, next) => {
   try {
     const { page = 1, limit = 20, search, interests } = req.query;
@@ -60,7 +60,8 @@ router.get('/', optionalAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/users/me/notifications
+// ─── GET /api/users/me/notifications ─────────────────────────────────────────
+// IMPORTANT: ALL /me/* routes MUST come before /:handle
 router.get('/me/notifications', requireAuth, async (req, res, next) => {
   try {
     const { unread_only } = req.query;
@@ -68,7 +69,8 @@ router.get('/me/notifications', requireAuth, async (req, res, next) => {
     if (unread_only === 'true') where += ' AND n.is_read = false';
 
     const result = await query(`
-      SELECT n.*, u.handle as actor_handle, u.avatar_url as actor_avatar, u.color as actor_color, u.initials as actor_initials
+      SELECT n.*, u.handle as actor_handle, u.avatar_url as actor_avatar,
+             u.color as actor_color, u.initials as actor_initials
       FROM notifications n
       LEFT JOIN users u ON u.id = n.actor_id
       ${where}
@@ -78,12 +80,71 @@ router.get('/me/notifications', requireAuth, async (req, res, next) => {
     res.json(result.rows);
   } catch (err) { next(err); }
 });
-// POST /api/users/me/notifications/read
+
+// ─── POST /api/users/me/notifications/read ────────────────────────────────────
 router.post('/me/notifications/read', requireAuth, async (req, res, next) => {
   try {
     await query('UPDATE notifications SET is_read = true WHERE user_id = $1', [req.user.id]);
     res.json({ ok: true });
-// GET /api/users/:handle
+  } catch (err) { next(err); }
+});
+
+// ─── PATCH /api/users/me — update own profile ─────────────────────────────────
+router.patch('/me', requireAuth, [
+  body('name').optional().trim().isLength({ min: 2, max: 100 }),
+  body('bio').optional().trim().isLength({ max: 500 }),
+  body('website').optional().isURL().withMessage('Invalid website URL'),
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { name, bio, title, affiliation, location, website, interests, open_to_collab } = req.body;
+    const fields = [];
+    const vals = [];
+    let i = 1;
+
+    const add = (field, val) => {
+      if (val !== undefined) { fields.push(`${field} = $${i++}`); vals.push(val); }
+    };
+    add('name', name);
+    add('bio', bio);
+    add('title', title);
+    add('affiliation', affiliation);
+    add('location', location);
+    add('website', website);
+    add('open_to_collab', open_to_collab);
+    if (interests !== undefined) { fields.push(`interests = $${i++}`); vals.push(interests); }
+    if (name) {
+      fields.push(`initials = $${i++}`);
+      vals.push(name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase());
+    }
+
+    if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
+    vals.push(req.user.id);
+
+    const result = await query(
+      `UPDATE users SET ${fields.join(', ')} WHERE id = $${i}
+       RETURNING id, handle, name, bio, title, affiliation, location, website,
+                 avatar_url, color, initials, interests, open_to_collab, is_verified`,
+      vals
+    );
+    res.json(result.rows[0]);
+  } catch (err) { next(err); }
+});
+
+// ─── POST /api/users/me/avatar ─────────────────────────────────────────────────
+router.post('/me/avatar', requireAuth, upload.single('avatar'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, req.user.id]);
+    res.json({ avatarUrl });
+  } catch (err) { next(err); }
+});
+
+// ─── GET /api/users/:handle ────────────────────────────────────────────────────
+// NOTE: This wildcard MUST come after all /me/* routes
 router.get('/:handle', optionalAuth, async (req, res, next) => {
   try {
     const result = await query(`
@@ -125,54 +186,7 @@ router.get('/:handle', optionalAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// PATCH /api/users/me — update own profile
-router.patch('/me', requireAuth, [
-  body('name').optional().trim().isLength({ min: 2, max: 100 }),
-  body('bio').optional().trim().isLength({ max: 500 }),
-  body('website').optional().isURL().withMessage('Invalid website URL'),
-], async (req, res, next) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
-    const { name, bio, title, affiliation, location, website, interests, open_to_collab } = req.body;
-    const fields = [];
-    const vals = [];
-    let i = 1;
-
-    const add = (field, val) => { if (val !== undefined) { fields.push(`${field} = $${i++}`); vals.push(val); } };
-    add('name', name);
-    add('bio', bio);
-    add('title', title);
-    add('affiliation', affiliation);
-    add('location', location);
-    add('website', website);
-    add('open_to_collab', open_to_collab);
-    if (interests !== undefined) { fields.push(`interests = $${i++}`); vals.push(interests); }
-    if (name) { fields.push(`initials = $${i++}`); vals.push(name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()); }
-
-    if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
-    vals.push(req.user.id);
-
-    const result = await query(
-      `UPDATE users SET ${fields.join(', ')} WHERE id = $${i} RETURNING id, handle, name, bio, title, affiliation, location, website, avatar_url, color, initials, interests, open_to_collab, is_verified`,
-      vals
-    );
-    res.json(result.rows[0]);
-  } catch (err) { next(err); }
-});
-
-// POST /api/users/me/avatar
-router.post('/me/avatar', requireAuth, upload.single('avatar'), async (req, res, next) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-    await query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, req.user.id]);
-    res.json({ avatarUrl });
-  } catch (err) { next(err); }
-});
-
-// POST /api/users/:handle/follow
+// ─── POST /api/users/:handle/follow ───────────────────────────────────────────
 router.post('/:handle/follow', requireAuth, async (req, res, next) => {
   try {
     const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
@@ -181,7 +195,10 @@ router.post('/:handle/follow', requireAuth, async (req, res, next) => {
     const targetId = target.rows[0].id;
     if (targetId === req.user.id) return res.status(400).json({ error: 'Cannot follow yourself' });
 
-    const existing = await query('SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = $2', [req.user.id, targetId]);
+    const existing = await query(
+      'SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = $2',
+      [req.user.id, targetId]
+    );
 
     if (existing.rows.length) {
       // Unfollow
@@ -206,7 +223,7 @@ router.post('/:handle/follow', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/users/:handle/followers
+// ─── GET /api/users/:handle/followers ─────────────────────────────────────────
 router.get('/:handle/followers', async (req, res, next) => {
   try {
     const user = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
@@ -223,7 +240,7 @@ router.get('/:handle/followers', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/users/:handle/collab — send collaboration request
+// ─── POST /api/users/:handle/collab — send collaboration request ──────────────
 router.post('/:handle/collab', requireAuth, async (req, res, next) => {
   try {
     const { message, postId } = req.body;
@@ -245,10 +262,6 @@ router.post('/:handle/collab', requireAuth, async (req, res, next) => {
     `, [toUser, `@${req.user.handle} wants to collaborate`, message || 'Sent you a collaboration request', req.user.id]);
 
     res.json({ sent: true });
-  } catch (err) { next(err); }
-});
-
-
   } catch (err) { next(err); }
 });
 

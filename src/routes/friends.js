@@ -3,7 +3,7 @@ const { query } = require('../db/pool');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const router = express.Router();
 
-// ─── Helper: get friendship status between two users ─────────────────────────
+// ─── Helper: get friendship row between two users ─────────────────────────────
 async function getFriendship(userA, userB) {
   const res = await query(`
     SELECT * FROM friendships
@@ -25,7 +25,7 @@ function friendStatusFor(friendship, myId) {
   return 'none';
 }
 
-// GET /api/friends — list my friends
+// ─── GET /api/friends — list my friends ──────────────────────────────────────
 router.get('/', requireAuth, async (req, res, next) => {
   try {
     const result = await query(`
@@ -44,7 +44,8 @@ router.get('/', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/friends/requests — incoming friend requests
+// ─── GET /api/friends/requests — incoming friend requests ─────────────────────
+// NOTE: All /requests, /sent, /status/:handle, /feed/posts MUST come before /:handle
 router.get('/requests', requireAuth, async (req, res, next) => {
   try {
     const result = await query(`
@@ -60,7 +61,7 @@ router.get('/requests', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/friends/sent — outgoing requests I sent
+// ─── GET /api/friends/sent — outgoing requests I sent ─────────────────────────
 router.get('/sent', requireAuth, async (req, res, next) => {
   try {
     const result = await query(`
@@ -76,7 +77,7 @@ router.get('/sent', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/friends/status/:handle — get friendship status with a user
+// ─── GET /api/friends/status/:handle — friendship status with a user ──────────
 router.get('/status/:handle', requireAuth, async (req, res, next) => {
   try {
     const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
@@ -90,129 +91,8 @@ router.get('/status/:handle', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/friends/:handle — get someone's public friends list
-router.get('/:handle', optionalAuth, async (req, res, next) => {
-  try {
-    const user = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
-    if (!user.rows.length) return res.status(404).json({ error: 'User not found' });
-    const userId = user.rows[0].id;
-
-    const result = await query(`
-      SELECT u.id, u.handle, u.name, u.avatar_url, u.color, u.initials,
-             u.affiliation, u.is_verified, u.role
-      FROM friendships f
-      JOIN users u ON u.id = CASE
-        WHEN f.requester_id = $1 THEN f.addressee_id
-        ELSE f.requester_id
-      END
-      WHERE (f.requester_id = $1 OR f.addressee_id = $1)
-        AND f.status = 'accepted'
-      ORDER BY f.updated_at DESC
-      LIMIT 50
-    `, [userId]);
-    res.json(result.rows);
-  } catch (err) { next(err); }
-});
-
-// POST /api/friends/request/:handle — send friend request
-router.post('/request/:handle', requireAuth, async (req, res, next) => {
-  try {
-    const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
-    if (!target.rows.length) return res.status(404).json({ error: 'User not found' });
-    const targetId = target.rows[0].id;
-    if (targetId === req.user.id) return res.status(400).json({ error: 'Cannot friend yourself' });
-
-    // Check existing friendship
-    const existing = await getFriendship(req.user.id, targetId);
-    if (existing) {
-      if (existing.status === 'accepted') return res.status(409).json({ error: 'Already friends' });
-      if (existing.status === 'pending') return res.status(409).json({ error: 'Request already sent' });
-      if (existing.status === 'blocked') return res.status(403).json({ error: 'Cannot send request' });
-    }
-
-    await query(`
-      INSERT INTO friendships (requester_id, addressee_id, status)
-      VALUES ($1, $2, 'pending')
-      ON CONFLICT (requester_id, addressee_id) DO UPDATE SET status = 'pending', updated_at = NOW()
-    `, [req.user.id, targetId]);
-
-    // Notify
-    await query(`
-      INSERT INTO notifications (user_id, type, title, body, link, actor_id)
-      VALUES ($1, 'follow', $2, $3, $4, $5)
-    `, [targetId, `@${req.user.handle} sent you a friend request`, 'Accept or decline in your profile', `/profile/${req.user.handle}`, req.user.id]);
-
-    res.json({ status: 'request_sent' });
-  } catch (err) { next(err); }
-});
-
-// POST /api/friends/accept/:friendshipId — accept a request
-router.post('/accept/:friendshipId', requireAuth, async (req, res, next) => {
-  try {
-    const result = await query(
-      `UPDATE friendships SET status = 'accepted', updated_at = NOW()
-       WHERE id = $1 AND addressee_id = $2 AND status = 'pending'
-       RETURNING *, (SELECT handle FROM users WHERE id = requester_id) as requester_handle`,
-      [req.params.friendshipId, req.user.id]
-    );
-    if (!result.rows.length) return res.status(404).json({ error: 'Request not found' });
-
-    const { requester_id, requester_handle } = result.rows[0];
-
-    // Notify the requester
-    await query(`
-      INSERT INTO notifications (user_id, type, title, body, link, actor_id)
-      VALUES ($1, 'follow', $2, $3, $4, $5)
-    `, [requester_id, `@${req.user.handle} accepted your friend request!`, 'You are now friends.', `/profile/${req.user.handle}`, req.user.id]);
-
-    res.json({ status: 'friends', with: requester_handle });
-  } catch (err) { next(err); }
-});
-
-// POST /api/friends/decline/:friendshipId — decline a request
-router.post('/decline/:friendshipId', requireAuth, async (req, res, next) => {
-  try {
-    await query(
-      `UPDATE friendships SET status = 'declined', updated_at = NOW()
-       WHERE id = $1 AND addressee_id = $2`,
-      [req.params.friendshipId, req.user.id]
-    );
-    res.json({ status: 'declined' });
-  } catch (err) { next(err); }
-});
-
-// DELETE /api/friends/:handle — unfriend
-router.delete('/:handle', requireAuth, async (req, res, next) => {
-  try {
-    const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
-    if (!target.rows.length) return res.status(404).json({ error: 'User not found' });
-
-    await query(`
-      DELETE FROM friendships
-      WHERE ((requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1))
-        AND status = 'accepted'
-    `, [req.user.id, target.rows[0].id]);
-
-    res.json({ status: 'removed' });
-  } catch (err) { next(err); }
-});
-
-// DELETE /api/friends/cancel/:handle — cancel outgoing request
-router.delete('/cancel/:handle', requireAuth, async (req, res, next) => {
-  try {
-    const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
-    if (!target.rows.length) return res.status(404).json({ error: 'User not found' });
-
-    await query(`
-      DELETE FROM friendships
-      WHERE requester_id = $1 AND addressee_id = $2 AND status = 'pending'
-    `, [req.user.id, target.rows[0].id]);
-
-    res.json({ status: 'cancelled' });
-  } catch (err) { next(err); }
-});
-
-// GET /api/friends/feed/posts — posts from friends only
+// ─── GET /api/friends/feed/posts — posts from friends only ────────────────────
+// CRITICAL: must be before /:handle
 router.get('/feed/posts', requireAuth, async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
@@ -255,6 +135,126 @@ router.get('/feed/posts', requireAuth, async (req, res, next) => {
     `, [req.user.id]);
 
     res.json({ posts: result.rows, total: parseInt(count.rows[0].count), page: parseInt(page) });
+  } catch (err) { next(err); }
+});
+
+// ─── GET /api/friends/:handle — get someone's public friends list ──────────────
+// NOTE: This wildcard comes after all static paths above
+router.get('/:handle', optionalAuth, async (req, res, next) => {
+  try {
+    const user = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
+    if (!user.rows.length) return res.status(404).json({ error: 'User not found' });
+    const userId = user.rows[0].id;
+
+    const result = await query(`
+      SELECT u.id, u.handle, u.name, u.avatar_url, u.color, u.initials,
+             u.affiliation, u.is_verified, u.role
+      FROM friendships f
+      JOIN users u ON u.id = CASE
+        WHEN f.requester_id = $1 THEN f.addressee_id
+        ELSE f.requester_id
+      END
+      WHERE (f.requester_id = $1 OR f.addressee_id = $1)
+        AND f.status = 'accepted'
+      ORDER BY f.updated_at DESC
+      LIMIT 50
+    `, [userId]);
+    res.json(result.rows);
+  } catch (err) { next(err); }
+});
+
+// ─── POST /api/friends/request/:handle — send friend request ──────────────────
+router.post('/request/:handle', requireAuth, async (req, res, next) => {
+  try {
+    const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
+    if (!target.rows.length) return res.status(404).json({ error: 'User not found' });
+    const targetId = target.rows[0].id;
+    if (targetId === req.user.id) return res.status(400).json({ error: 'Cannot friend yourself' });
+
+    const existing = await getFriendship(req.user.id, targetId);
+    if (existing) {
+      if (existing.status === 'accepted') return res.status(409).json({ error: 'Already friends' });
+      if (existing.status === 'pending') return res.status(409).json({ error: 'Request already sent' });
+      if (existing.status === 'blocked') return res.status(403).json({ error: 'Cannot send request' });
+    }
+
+    await query(`
+      INSERT INTO friendships (requester_id, addressee_id, status)
+      VALUES ($1, $2, 'pending')
+      ON CONFLICT (requester_id, addressee_id) DO UPDATE SET status = 'pending', updated_at = NOW()
+    `, [req.user.id, targetId]);
+
+    await query(`
+      INSERT INTO notifications (user_id, type, title, body, link, actor_id)
+      VALUES ($1, 'follow', $2, $3, $4, $5)
+    `, [targetId, `@${req.user.handle} sent you a friend request`, 'Accept or decline in your profile', `/profile/${req.user.handle}`, req.user.id]);
+
+    res.json({ status: 'request_sent' });
+  } catch (err) { next(err); }
+});
+
+// ─── POST /api/friends/accept/:friendshipId — accept a request ────────────────
+router.post('/accept/:friendshipId', requireAuth, async (req, res, next) => {
+  try {
+    const result = await query(
+      `UPDATE friendships SET status = 'accepted', updated_at = NOW()
+       WHERE id = $1 AND addressee_id = $2 AND status = 'pending'
+       RETURNING *, (SELECT handle FROM users WHERE id = requester_id) as requester_handle`,
+      [req.params.friendshipId, req.user.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Request not found' });
+
+    const { requester_id, requester_handle } = result.rows[0];
+    await query(`
+      INSERT INTO notifications (user_id, type, title, body, link, actor_id)
+      VALUES ($1, 'follow', $2, $3, $4, $5)
+    `, [requester_id, `@${req.user.handle} accepted your friend request!`, 'You are now friends.', `/profile/${req.user.handle}`, req.user.id]);
+
+    res.json({ status: 'friends', with: requester_handle });
+  } catch (err) { next(err); }
+});
+
+// ─── POST /api/friends/decline/:friendshipId — decline a request ──────────────
+router.post('/decline/:friendshipId', requireAuth, async (req, res, next) => {
+  try {
+    await query(
+      `UPDATE friendships SET status = 'declined', updated_at = NOW()
+       WHERE id = $1 AND addressee_id = $2`,
+      [req.params.friendshipId, req.user.id]
+    );
+    res.json({ status: 'declined' });
+  } catch (err) { next(err); }
+});
+
+// ─── DELETE /api/friends/cancel/:handle — cancel outgoing request ─────────────
+// CRITICAL: must be before DELETE /:handle
+router.delete('/cancel/:handle', requireAuth, async (req, res, next) => {
+  try {
+    const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
+    if (!target.rows.length) return res.status(404).json({ error: 'User not found' });
+
+    await query(`
+      DELETE FROM friendships
+      WHERE requester_id = $1 AND addressee_id = $2 AND status = 'pending'
+    `, [req.user.id, target.rows[0].id]);
+
+    res.json({ status: 'cancelled' });
+  } catch (err) { next(err); }
+});
+
+// ─── DELETE /api/friends/:handle — unfriend ───────────────────────────────────
+router.delete('/:handle', requireAuth, async (req, res, next) => {
+  try {
+    const target = await query('SELECT id FROM users WHERE handle = $1', [req.params.handle]);
+    if (!target.rows.length) return res.status(404).json({ error: 'User not found' });
+
+    await query(`
+      DELETE FROM friendships
+      WHERE ((requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1))
+        AND status = 'accepted'
+    `, [req.user.id, target.rows[0].id]);
+
+    res.json({ status: 'removed' });
   } catch (err) { next(err); }
 });
 
