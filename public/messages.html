@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — ResearchSocial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--text-xs:clamp(.75rem,.7rem + .25vw,.875rem);--text-sm:clamp(.875rem,.8rem + .35vw,1rem);--text-base:clamp(1rem,.95rem + .25vw,1.125rem);--text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);--s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;--tr:180ms cubic-bezier(.16,1,.3,1);--font:'Inter',sans-serif;}
+:root,[data-theme="light"]{--bg:#f0f2f5;--surface:#fff;--off:#eef0f3;--dyn:#e2e5ea;--div:#dde0e5;--bdr:#cdd1d8;--text:#1a1d23;--muted:#636878;--faint:#a8adb8;--inv:#fff;--pri:#4f46e5;--pri-h:#3730a3;--pri-hl:#e0e7ff;--suc:#16a34a;--err:#dc2626;--sh-sm:0 1px 3px rgba(0,0,0,.08);--sh-lg:0 12px 40px rgba(0,0,0,.14);}
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--off:#21262d;--dyn:#2d333b;--div:#30363d;--bdr:#3d444d;--text:#e6edf3;--muted:#8b949e;--faint:#484f58;--inv:#0d1117;--pri:#818cf8;--pri-h:#a5b4fc;--pri-hl:#1e1b4b;--suc:#4ade80;--err:#f87171;--sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-lg:0 12px 40px rgba(0,0,0,.5);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}body{min-height:100dvh;font-family:var(--font);font-size:var(--text-base);color:var(--text);background:var(--bg);transition:background .3s,color .3s;display:flex;flex-direction:column;}
+img,svg{display:block;max-width:100%;}button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;}a{color:inherit;text-decoration:none;}input,textarea{font:inherit;color:inherit;}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px;border-radius:var(--r-sm);}
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s6);background:var(--surface);border-bottom:1px solid var(--div);height:56px;flex-shrink:0;}
+.nav-left{display:flex;align-items:center;gap:var(--s4);}
+.nav-back{display:flex;align-items:center;gap:var(--s2);font-size:var(--text-sm);font-weight:500;color:var(--muted);padding:var(--s2) var(--s3);border-radius:var(--r-md);transition:all var(--tr);}
+.nav-back:hover{background:var(--off);color:var(--text);}
+.nav-logo{display:flex;align-items:center;gap:var(--s2);font-size:var(--text-lg);font-family:'DM Serif Display',Georgia,serif;font-weight:700;}
+.btn-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-full);color:var(--muted);transition:all var(--tr);}
+.btn-icon:hover{background:var(--off);color:var(--text);}
+.msg-layout{display:grid;grid-template-columns:300px 1fr;flex:1;overflow:hidden;height:calc(100dvh - 56px);}
+.conv-panel{background:var(--surface);border-right:1px solid var(--div);display:flex;flex-direction:column;overflow:hidden;}
+.conv-hdr{padding:var(--s5);border-bottom:1px solid var(--div);flex-shrink:0;}
+.conv-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s4);}
+.conv-title{font-size:var(--text-lg);font-weight:800;font-family:'DM Serif Display',Georgia,serif;}
+.btn-compose{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-radius:var(--r-full);font-size:var(--text-sm);font-weight:700;background:var(--pri);color:var(--inv);transition:all var(--tr);}
+.btn-compose:hover{background:var(--pri-h);}[data-theme="dark"] .btn-compose{color:#0d1117;}
+.conv-search{position:relative;}
+.conv-search input{width:100%;padding:var(--s2) var(--s4) var(--s2) 32px;background:var(--off);border:1px solid var(--bdr);border-radius:var(--r-full);font-size:var(--text-sm);transition:all var(--tr);}
+.conv-search input:focus{outline:none;border-color:var(--pri);}
+.conv-si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;}
+.conv-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bdr) transparent;}
+.conv-item{display:flex;align-items:center;gap:var(--s3);padding:var(--s4) var(--s5);cursor:pointer;transition:background var(--tr);border-bottom:1px solid var(--div);position:relative;}
+.conv-item:hover{background:var(--off);}
+.conv-item.active{background:var(--pri-hl);}
+.conv-info{flex:1;min-width:0;}
+.conv-name-row{display:flex;justify-content:space-between;margin-bottom:2px;}
+.conv-name{font-size:var(--text-sm);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.conv-time{font-size:10px;color:var(--faint);flex-shrink:0;margin-left:8px;}
+.conv-preview{font-size:var(--text-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;}
+.unread-dot{min-width:18px;height:18px;background:var(--pri);color:var(--inv);border-radius:var(--r-full);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px;position:absolute;right:16px;bottom:12px;}[data-theme="dark"] .unread-dot{color:#0d1117;}
+.thread-panel{display:flex;flex-direction:column;background:var(--bg);overflow:hidden;}
+.thread-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s4);color:var(--faint);text-align:center;padding:40px;}
+.thread-hdr{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) var(--s6);background:var(--surface);border-bottom:1px solid var(--div);flex-shrink:0;}
+.thread-messages{flex:1;overflow-y:auto;padding:var(--s6);display:flex;flex-direction:column;gap:var(--s4);scrollbar-width:thin;scrollbar-color:var(--bdr) transparent;}
+.date-sep{display:flex;align-items:center;gap:var(--s4);color:var(--faint);font-size:var(--text-xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin:var(--s2) 0;}
+.date-sep::before,.date-sep::after{content:'';flex:1;height:1px;background:var(--div);}
+.msg-row{display:flex;align-items:flex-end;gap:var(--s3);max-width:72%;animation:msgIn .2s ease;}
+.msg-row.mine{margin-left:auto;flex-direction:row-reverse;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.bubble-wrap{display:flex;flex-direction:column;gap:3px;}
+.msg-row.mine .bubble-wrap{align-items:flex-end;}
+.bubble{padding:var(--s3) var(--s4);border-radius:var(--r-xl);font-size:var(--text-sm);line-height:1.6;word-break:break-word;max-width:420px;}
+.msg-row.mine .bubble{background:var(--pri);color:var(--inv);border-bottom-right-radius:var(--r-sm);}[data-theme="dark"] .msg-row.mine .bubble{color:#0d1117;}
+.msg-row.theirs .bubble{background:var(--surface);border:1px solid var(--div);border-bottom-left-radius:var(--r-sm);box-shadow:var(--sh-sm);}
+.msg-meta{font-size:10px;color:var(--faint);display:flex;align-items:center;gap:4px;}
+.msg-row.mine .msg-meta{justify-content:flex-end;}
+.typing-indicator{display:flex;align-items:flex-end;gap:var(--s3);max-width:72%;margin-right:auto;opacity:0;transition:opacity .2s;}
+.typing-indicator.show{opacity:1;}
+.typing-bubble{padding:var(--s3) var(--s4);background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);border-bottom-left-radius:var(--r-sm);display:flex;align-items:center;gap:5px;height:40px;}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--faint);animation:dot 1.2s infinite;}
+.typing-dot:nth-child(2){animation-delay:.2s;}.typing-dot:nth-child(3){animation-delay:.4s;}
+@keyframes dot{0%,80%,100%{transform:scale(1);opacity:.5;}40%{transform:scale(1.3);opacity:1;}}
+.thread-input{padding:var(--s4) var(--s6);background:var(--surface);border-top:1px solid var(--div);flex-shrink:0;}
+.input-row{display:flex;align-items:flex-end;gap:var(--s3);}
+.input-wrap{flex:1;background:var(--off);border:1px solid var(--bdr);border-radius:var(--r-xl);padding:var(--s3) var(--s4);display:flex;align-items:flex-end;gap:var(--s3);transition:all var(--tr);}
+.input-wrap:focus-within{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-hl);}
+.msg-ta{flex:1;background:none;border:none;resize:none;outline:none;font-size:var(--text-sm);line-height:1.5;max-height:120px;min-height:20px;color:var(--text);}
+.msg-ta::placeholder{color:var(--faint);}
+.btn-send{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-full);background:var(--pri);color:var(--inv);transition:all var(--tr);flex-shrink:0;}
+.btn-send:hover:not(:disabled){background:var(--pri-h);transform:scale(1.05);}
+.btn-send:disabled{opacity:.4;cursor:not-allowed;}[data-theme="dark"] .btn-send{color:#0d1117;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--r-xl);width:100%;max-width:460px;box-shadow:var(--sh-lg);transform:scale(.95) translateY(10px);transition:transform .2s cubic-bezier(.16,1,.3,1);}
+.modal-overlay.open .modal{transform:scale(1) translateY(0);}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--div);}
+.modal-title{font-size:15px;font-weight:700;}
+.modal-body{padding:20px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.form-select,.form-input,.form-textarea{width:100%;padding:8px 12px;background:var(--off);border:1px solid var(--bdr);border-radius:var(--r-lg);font-size:13px;color:var(--text);transition:all var(--tr);-webkit-appearance:none;appearance:none;}
+.form-select:focus,.form-input:focus,.form-textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-hl);}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.6;}
+.modal-footer{padding:16px 20px;border-top:1px solid var(--div);display:flex;gap:10px;}
+.btn-send-msg{flex:1;padding:10px;background:var(--pri);color:var(--inv);border-radius:var(--r-full);font-size:13px;font-weight:700;transition:all var(--tr);}
+.btn-send-msg:hover{background:var(--pri-h);}[data-theme="dark"] .btn-send-msg{color:#0d1117;}
+.btn-cancel{padding:10px 18px;border:1.5px solid var(--bdr);border-radius:var(--r-full);font-size:13px;font-weight:600;color:var(--muted);transition:all var(--tr);}
+.btn-cancel:hover{border-color:var(--err);color:var(--err);}
+.auth-wall{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px;}
+.auth-wall h2{font-size:22px;font-weight:800;font-family:'DM Serif Display',Georgia,serif;}
+.auth-wall p{font-size:14px;color:var(--muted);max-width:280px;line-height:1.6;}
+.btn-auth{padding:12px 32px;background:var(--pri);color:var(--inv);border-radius:var(--r-full);font-size:13px;font-weight:700;transition:all var(--tr);}
+.btn-auth:hover{background:var(--pri-h);transform:translateY(-1px);}[data-theme="dark"] .btn-auth{color:#0d1117;}
+.site-footer{text-align:center;padding:16px;font-size:12px;color:var(--faint);border-top:1px solid var(--div);}
+.site-footer a{color:var(--pri);}
+@media(max-width:768px){
+  .msg-layout{grid-template-columns:1fr;}
+  .thread-panel{position:fixed;inset:56px 0 0 0;z-index:50;transform:translateX(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);}
+  .thread-panel.open{transform:translateX(0);}
+  .msg-row{max-width:88%;}
+}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/" class="nav-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Feed</a>
+    <a href="/" class="nav-logo">
+      <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="var(--pri)"/><circle cx="11" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none"/><circle cx="21" cy="11" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".6"/><circle cx="16" cy="21" r="4.5" stroke="white" stroke-width="2" fill="none" opacity=".8"/></svg>
+      ResearchSocial
+    </a>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="btn-icon" data-theme-toggle><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+    <div id="navInfo" style="font-size:13px;font-weight:600;color:var(--muted)"></div>
+  </div>
+</nav>
+
+<div id="appWrap" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+  <!-- Auth wall (shown if not logged in) -->
+  <div class="auth-wall" id="authWall" style="display:none;">
+    <div style="font-size:48px">✉️</div>
+    <h2>Messages</h2>
+    <p>Sign in to send and receive direct messages from researchers.</p>
+    <a href="/" class="btn-auth">Sign In on Feed</a>
+  </div>
+
+  <!-- Messages UI -->
+  <div class="msg-layout" id="msgLayout" style="display:none;">
+    <!-- Conversation list -->
+    <div class="conv-panel">
+      <div class="conv-hdr">
+        <div class="conv-hdr-row"><span class="conv-title">Messages</span><button class="btn-compose" onclick="openCompose()">+ New</button></div>
+        <div class="conv-search"><svg class="conv-si" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search conversations…" id="searchConv" oninput="filterConvs(this.value)"></div>
+      </div>
+      <div class="conv-list" id="convList"><div style="text-align:center;padding:40px;color:var(--muted)">Loading…</div></div>
+    </div>
+
+    <!-- Thread panel -->
+    <div class="thread-panel" id="threadPanel">
+      <div class="thread-empty" id="threadEmpty">
+        <div style="font-size:48px">💬</div>
+        <div style="font-size:16px;font-weight:600">Your messages</div>
+        <div style="font-size:13px">Select a conversation or start a new one.</div>
+      </div>
+      <div id="threadHeader" style="display:none;" class="thread-hdr">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="btn-icon" onclick="closeThread()" style="display:none" id="backBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+          <div id="threadAvatar"></div>
+          <div>
+            <div id="threadName" style="font-weight:700;font-size:14px;"></div>
+            <div style="font-size:11px;color:var(--suc);display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--suc);display:inline-block;"></span>Active</div>
+          </div>
+        </div>
+        <a id="threadProfileLink" class="btn-icon" title="View profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      </div>
+      <div id="threadMessages" style="display:none;" class="thread-messages"></div>
+      <div id="typingWrap" style="display:none;padding:0 24px 8px;"><div class="typing-indicator" id="typingInd"><div id="typingAvatar"></div><div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div></div>
+      <div id="threadInput" style="display:none;" class="thread-input">
+        <div class="input-row">
+          <div class="input-wrap">
+            <textarea class="msg-ta" id="msgTa" placeholder="Write a message…" rows="1" oninput="autoGrow(this);handleTyping();" onkeydown="handleKey(event)"></textarea>
+          </div>
+          <button class="btn-send" id="sendBtn" onclick="doSend()" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSE MODAL -->
+<div class="modal-overlay" id="composeModal">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">New Message</span><button class="btn-icon" onclick="closeCompose()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">To</label><select class="form-select" id="composeTo"><option value="">— Select researcher —</option></select></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" id="composeText" placeholder="Write your message…"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeCompose()">Cancel</button><button class="btn-send-msg" onclick="sendCompose()">Send Message</button></div>
+  </div>
+</div>
+
+<footer class="site-footer"><a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a></footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/api.js"></script>
+<script>
+(function(){const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;let d=localStorage.getItem('rs_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');r.setAttribute('data-theme',d);upd(d);t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);localStorage.setItem('rs_theme',d);upd(d);});function upd(v){t.innerHTML=v==='dark'?`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;};})();
+
+const me = Auth.getUser();
+let currentConvId = null;
+let socket = null;
+let allConvs = [];
+let typingTimer = null;
+
+async function init() {
+  if (!me) { document.getElementById('authWall').style.display='flex'; return; }
+  document.getElementById('msgLayout').style.display='grid';
+  document.getElementById('navInfo').innerHTML = `<a href="/profile/${me.handle}" style="color:var(--pri)">@${esc(me.handle)}</a>`;
+  await loadConversations();
+
+  // Check ?with=userId query param
+  const params = new URLSearchParams(window.location.search);
+  const withId = params.get('with');
+  if (withId && withId !== me.id) {
+    try {
+      const res = await API.getOrCreateConversation(withId);
+      openConv(res.conversationId);
+    } catch(e) {}
+  }
+
+  initSocket();
+  loadComposeList();
+}
+
+async function loadConversations() {
+  try {
+    allConvs = await API.getConversations();
+    renderConvList(allConvs);
+  } catch(e) {
+    document.getElementById('convList').innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted)">Failed: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderConvList(convs) {
+  const list = document.getElementById('convList');
+  if (!convs.length) { list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">No conversations yet.<br>Click "+ New" to start one.</div>'; return; }
+  list.innerHTML = convs.map(c => {
+    const others = c.participants.filter(p => p.id !== me.id);
+    const other = others[0] || c.participants[0];
+    const unread = parseInt(c.unread_count)||0;
+    const isActive = c.id === currentConvId;
+    return `
+    <div class="conv-item${isActive?' active':''}" onclick="openConv('${esc(c.id)}')" data-conv-id="${esc(c.id)}">
+      ${avatarSVG(other, 44)}
+      <div class="conv-info">
+        <div class="conv-name-row"><span class="conv-name${unread?' font-weight:800;color:var(--text)':''}" style="${unread?'font-weight:800':''}">@${esc(other?.handle||'unknown')}</span><span class="conv-time">${c.last_message_at ? fmtTime(c.last_message_at) : ''}</span></div>
+        <div class="conv-preview" style="${unread?'font-weight:600;color:var(--text)':''}">
+          ${c.last_sender_id===me.id?'<span style="color:var(--faint)">You: </span>':''}${c.last_message_body ? esc(c.last_message_body.slice(0,60)) : 'No messages yet'}
+        </div>
+      </div>
+      ${unread ? `<div class="unread-dot">${unread>9?'9+':unread}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterConvs(val) {
+  if (!val) { renderConvList(allConvs); return; }
+  const q = val.toLowerCase();
+  renderConvList(allConvs.filter(c => c.participants.some(p => p.handle?.toLowerCase().includes(q) || p.name?.toLowerCase().includes(q))));
+}
+
+async function openConv(convId) {
+  currentConvId = convId;
+  const conv = allConvs.find(c => c.id === convId);
+  const other = conv ? conv.participants.find(p=>p.id!==me.id) || conv.participants[0] : null;
+
+  document.getElementById('threadEmpty').style.display = 'none';
+  document.getElementById('threadHeader').style.display = 'flex';
+  document.getElementById('threadMessages').style.display = 'flex';
+  document.getElementById('typingWrap').style.display = '';
+  document.getElementById('threadInput').style.display = '';
+
+  if (other) {
+    document.getElementById('threadAvatar').innerHTML = avatarSVG(other, 40);
+    document.getElementById('threadName').innerHTML = `<a href="/profile/${esc(other.handle)}" style="color:var(--text)">@${esc(other.handle)} — ${esc(other.name||'')}</a>`;
+    document.getElementById('threadProfileLink').href = `/profile/${esc(other.handle)}`;
+    document.getElementById('typingAvatar').innerHTML = avatarSVG(other, 28);
+  }
+
+  renderConvList(allConvs); // update active state
+  await loadMessages(convId);
+
+  // Mobile
+  document.getElementById('threadPanel').classList.add('open');
+  if (window.innerWidth <= 768) document.getElementById('backBtn').style.display='flex';
+
+  // Join socket room
+  if (socket) socket.emit('join_conversation', convId);
+  setTimeout(() => document.getElementById('msgTa').focus(), 100);
+}
+
+function closeThread() {
+  document.getElementById('threadPanel').classList.remove('open');
+  if (socket && currentConvId) socket.emit('leave_conversation', currentConvId);
+  currentConvId = null;
+}
+
+async function loadMessages(convId) {
+  const el = document.getElementById('threadMessages');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading…</div>';
+  try {
+    const msgs = await API.getMessages(convId, { limit: 50 });
+    renderMessages(msgs);
+  } catch(e) { el.innerHTML = `<div style="color:var(--muted);text-align:center;padding:20px">Failed: ${esc(e.message)}</div>`; }
+}
+
+function renderMessages(msgs) {
+  const el = document.getElementById('threadMessages');
+  if (!msgs.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">No messages yet. Say hello!</div>'; return; }
+  let html='', lastDay='';
+  msgs.forEach((m,i) => {
+    const day = new Date(m.created_at).toDateString();
+    if (day !== lastDay) {
+      lastDay = day;
+      const label = day===new Date().toDateString()?'Today':day===new Date(Date.now()-86400000).toDateString()?'Yesterday':new Date(m.created_at).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+      html += `<div class="date-sep">${esc(label)}</div>`;
+    }
+    const mine = m.sender_id === me.id;
+    const nextSame = msgs[i+1]?.sender_id===m.sender_id;
+    const isLast = i===msgs.length-1 || !nextSame;
+    html += `
+    <div class="msg-row ${mine?'mine':'theirs'}">
+      ${!mine?`<div style="${nextSame?'visibility:hidden':''}">${avatarSVG({color:m.sender_color,initials:m.sender_initials,avatar_url:m.sender_avatar},28)}</div>`:''}
+      <div class="bubble-wrap">
+        <div class="bubble">${esc(m.is_deleted?'[deleted]':m.body)}</div>
+        ${isLast?`<div class="msg-meta"><span>${fmtTimeFull(m.created_at)}</span>${mine?`<span title="${m.read?'Read':'Delivered'}">${m.read?'✓✓':'✓'}</span>`:''}</div>`:''}
+      </div>
+      ${mine?'<div style="width:28px;flex-shrink:0;"></div>':''}
+    </div>`;
+  });
+  el.innerHTML = html;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function doSend() {
+  if (!currentConvId) return;
+  const ta = document.getElementById('msgTa');
+  const text = ta.value.trim();
+  if (!text) return;
+  if (socket) {
+    socket.emit('send_message', { conversationId: currentConvId, body: text });
+    ta.value=''; ta.style.height='auto';
+    document.getElementById('sendBtn').disabled=true;
+    await loadMessages(currentConvId);
+    await loadConversations();
+  } else {
+    try {
+      await API.sendMessage(currentConvId, text);
+      ta.value=''; ta.style.height='auto';
+      document.getElementById('sendBtn').disabled=true;
+      await loadMessages(currentConvId);
+      await loadConversations();
+    } catch(e) { showToast('⚠️ ' + e.message); }
+  }
+}
+
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();} }
+function handleTyping() {
+  document.getElementById('sendBtn').disabled = !document.getElementById('msgTa').value.trim();
+  if (socket && currentConvId) {
+    socket.emit('typing_start', { conversationId: currentConvId });
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => socket.emit('typing_stop', { conversationId: currentConvId }), 1500);
+  }
+}
+function autoGrow(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+
+function initSocket() {
+  socket = getSocket();
+  if (!socket) return;
+  socket.on('new_message', async ({conversationId, message}) => {
+    if (conversationId === currentConvId) {
+      const msgs = await API.getMessages(currentConvId, { limit: 50 });
+      renderMessages(msgs);
+    }
+    loadConversations();
+  });
+  socket.on('typing_start', ({conversationId, userId}) => {
+    if (conversationId===currentConvId && userId!==me.id) {
+      document.getElementById('typingWrap').style.display='';
+      document.getElementById('typingInd').classList.add('show');
+      const el=document.getElementById('threadMessages'); el.scrollTop=el.scrollHeight+60;
+    }
+  });
+  socket.on('typing_stop', ({conversationId}) => {
+    if (conversationId===currentConvId) { document.getElementById('typingInd').classList.remove('show'); }
+  });
+}
+
+async function loadComposeList() {
+  try {
+    const data = await API.getFeed({ limit: 20 });
+    const seen = new Set([me.id]);
+    const users = [];
+    data.posts.forEach(p => { if(!seen.has(p.author_id)){seen.add(p.author_id);users.push({id:p.author_id,handle:p.author_handle,name:p.author_name});}});
+    const sel = document.getElementById('composeTo');
+    sel.innerHTML = '<option value="">— Select researcher —</option>' + users.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} (@${esc(u.handle)})</option>`).join('');
+  } catch {}
+}
+
+function openCompose() { document.getElementById('composeModal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeCompose() { document.getElementById('composeModal').classList.remove('open'); document.body.style.overflow=''; }
+async function sendCompose() {
+  const to = document.getElementById('composeTo').value;
+  const text = document.getElementById('composeText').value.trim();
+  if (!to) { showToast('⚠️ Select a recipient'); return; }
+  if (!text) { showToast('⚠️ Write a message'); return; }
+  try {
+    const res = await API.getOrCreateConversation(to);
+    await API.sendMessage(res.conversationId, text);
+    closeCompose();
+    document.getElementById('composeText').value = '';
+    await loadConversations();
+    openConv(res.conversationId);
+    showToast('✉️ Message sent!');
+  } catch(e) { showToast('⚠️ ' + e.message); }
+}
+
+document.getElementById('composeModal').addEventListener('click', e => { if(e.target===document.getElementById('composeModal')) closeCompose(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeCompose(); });
+
+init();
+</script>
+</body>
+</html>
