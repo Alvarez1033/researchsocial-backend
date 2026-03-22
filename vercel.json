@@ -1,9 +1,0 @@
-{
-  "outputDirectory": "public",
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://researchsocial-backend-production.up.railway.app/api/:path*"
-    }
-  ]
-}
