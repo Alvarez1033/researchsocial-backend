@@ -127,10 +127,19 @@ input{font:inherit;color:inherit;}
 
   <!-- Results -->
   <div id="results">
-    <div class="empty">
-      <div class="empty-icon">🔍</div>
-      <div style="font-weight:600;margin-bottom:6px;">Search ResearchSocial</div>
-      <div style="font-size:13px;">Find researchers, papers, and topics across the platform.</div>
+    <div id="emptyState">
+      <div id="trendingSection">
+        <div style="font-size:12px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Trending Topics</div>
+        <div id="trendingTagsList" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;">
+          <div class="skeleton" style="height:30px;width:80px;border-radius:999px;"></div>
+          <div class="skeleton" style="height:30px;width:100px;border-radius:999px;"></div>
+          <div class="skeleton" style="height:30px;width:70px;border-radius:999px;"></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Featured Researchers</div>
+        <div id="featuredResearchers" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;">
+          ${[1,2,3].map(()=>`<div class="skeleton" style="height:70px;border-radius:12px;"></div>`).join('')}
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -147,12 +156,48 @@ let currentType = 'all';
 let searchTimer = null;
 let currentQ = '';
 
+// Load trending tags and featured researchers for the empty state
+async function loadTrending() {
+  try {
+    const tags = await API.getTags();
+    const tagEl = document.getElementById('trendingTagsList');
+    if (tagEl) {
+      tagEl.innerHTML = tags.slice(0, 10).map(t => `
+        <button onclick="document.getElementById('mainSearch').value='#${esc(t.name)}';document.getElementById('clearBtn').style.display='flex';doSearch('${esc(t.name)}')"
+          style="padding:6px 14px;background:${t.color||'#818cf8'}22;color:${t.color||'#818cf8'};border:1px solid ${t.color||'#818cf8'}44;border-radius:9999px;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--tr);"
+          onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+          #${esc(t.name)} <span style="opacity:.6;font-size:11px;">${t.post_count||0}</span>
+        </button>`).join('');
+    }
+  } catch(_) {}
+
+  try {
+    const data = await API.searchUsers({ limit: 6 });
+    const el = document.getElementById('featuredResearchers');
+    if (el && data.users.length) {
+      el.innerHTML = data.users.map(u => `
+        <a href="/profile/${esc(u.handle)}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--div);border-radius:var(--r-xl);transition:all var(--tr);"
+           onmouseover="this.style.borderColor='var(--bdr)';this.style.boxShadow='var(--sh-card)'" onmouseout="this.style.borderColor='var(--div)';this.style.boxShadow=''">
+          ${avatarSVG(u, 36)}
+          <div style="min-width:0;">
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(u.name)}</div>
+            <div style="font-size:11px;color:var(--muted);">@${esc(u.handle)}</div>
+          </div>
+        </a>`).join('');
+    }
+  } catch(_) {}
+}
+
 // Init from URL param
 const params = new URLSearchParams(window.location.search);
 const initQ = params.get('q') || '';
 if (initQ) {
   document.getElementById('mainSearch').value = initQ;
+  document.getElementById('clearBtn').style.display = 'flex';
+  document.getElementById('emptyState').style.display = 'none';
   doSearch(initQ);
+} else {
+  loadTrending();
 }
 
 document.getElementById('mainSearch').addEventListener('input', e => {
@@ -187,19 +232,20 @@ function setType(type, btn) {
 
 function showEmpty() {
   currentQ = '';
-  document.getElementById('results').innerHTML = `
-    <div class="empty">
-      <div class="empty-icon">🔍</div>
-      <div style="font-weight:600;margin-bottom:6px;">Search ResearchSocial</div>
-      <div style="font-size:13px;">Find researchers, papers, and topics.</div>
-    </div>`;
+  window.history.replaceState(null, '', '/search');
+  document.title = 'Search — ResearchSocial';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('emptyState').style.display = '';
 }
 
 async function doSearch(q) {
   currentQ = q;
-  // Update URL
   window.history.replaceState(null, '', '/search?q=' + encodeURIComponent(q));
   document.title = `"${q}" — Search ResearchSocial`;
+
+  // Hide empty state, show results
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('results').style.display = '';
 
   // Show skeleton
   document.getElementById('results').innerHTML = `
