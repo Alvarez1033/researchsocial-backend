@@ -218,15 +218,24 @@ h1,h2,h3,h4{text-wrap:balance;line-height:1.2;}
         <div id="navAvatar"></div><span id="navHandle"></span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div id="userMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh-md);min-width:160px;overflow:hidden;z-index:200;">
-        <button onclick="goProfile()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;transition:background var(--tr);" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
+      <div id="userMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh-md);min-width:180px;overflow:hidden;z-index:200;">
+        <button onclick="goProfile()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;transition:background var(--tr);display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
           👤 My Profile
         </button>
-        <button onclick="goToMessages()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;transition:background var(--tr);" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
+        <button onclick="goToMessages()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;transition:background var(--tr);display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
           ✉️ Messages
         </button>
+        <button onclick="goToFriends()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;transition:background var(--tr);display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
+          👥 Friends
+        </button>
+        <div id="adminMenuItems" style="display:none;">
+          <div style="height:1px;background:var(--div);margin:4px 0;"></div>
+          <a href="/admin" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:700;transition:background var(--tr);display:flex;align-items:center;gap:8px;color:var(--pri);" onmouseover="this.style.background='var(--pri-hl)'" onmouseout="this.style.background=''">
+            🛡️ Admin Panel
+          </a>
+        </div>
         <div style="height:1px;background:var(--div);margin:4px 0;"></div>
-        <button onclick="doLogout()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;color:var(--err);transition:background var(--tr);" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
+        <button onclick="doLogout()" style="width:100%;text-align:left;padding:10px 16px;font-size:13px;font-weight:500;color:var(--err);transition:background var(--tr);display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='var(--off)'" onmouseout="this.style.background=''">
           🚪 Sign Out
         </button>
       </div>
@@ -397,6 +406,11 @@ function updateNav() {
     document.getElementById('navAvatar').innerHTML = avatarSVG(user, 24);
     document.getElementById('navHandle').textContent = '@' + user.handle;
     ctaAvatar.innerHTML = avatarSVG(user, 36);
+    // Show admin panel link for mods/admins
+    const adminItems = document.getElementById('adminMenuItems');
+    if (adminItems && ['moderator','admin','superadmin'].includes(user.role)) {
+      adminItems.style.display = 'block';
+    }
   } else {
     btn.style.display = '';
     pill.style.display = 'none';
@@ -408,6 +422,7 @@ function toggleUserMenu() {
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
 function goToMessages() { window.location.href = '/messages'; }
+function goToFriends() { const u=Auth.getUser(); if(u) window.location.href='/profile/'+u.handle+'?tab=friends'; }
 async function doLogout() {
   await API.logout();
   document.getElementById('userMenu').style.display = 'none';
