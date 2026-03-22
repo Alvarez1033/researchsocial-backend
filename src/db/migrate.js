@@ -309,3 +309,5 @@ async function migrate() {
 }
 
 migrate().catch(() => process.exit(1));
+
+// This is appended — run separately to add analytics tables

@@ -1,6 +1,7 @@
 const express = require('express');
 const { query } = require('../db/pool');
 const { requireAuth, requireMod, requireAdmin } = require('../middleware/auth');
+const { getAnalyticsSummary } = require('../middleware/analytics');
 
 const router = express.Router();
 
@@ -50,6 +51,9 @@ router.get('/stats', async (req, res, next) => {
       GROUP BY u.id ORDER BY post_count DESC LIMIT 10
     `);
 
+    // Analytics
+    const analytics = await getAnalyticsSummary();
+
     res.json({
       users: users.rows[0],
       posts: posts.rows[0],
@@ -60,6 +64,7 @@ router.get('/stats', async (req, res, next) => {
       post_activity: postActivity.rows,
       top_tags: topTags.rows,
       top_users: topUsers.rows,
+      analytics,
     });
   } catch (err) { next(err); }
 });

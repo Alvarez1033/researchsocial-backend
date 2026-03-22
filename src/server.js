@@ -36,6 +36,12 @@ if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'));
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 50, message: { error: 'Too many requests' } }));
 app.use('/api', rateLimit({ windowMs: 1 * 60 * 1000, max: 300, message: { error: 'Too many requests' } }));
 
+// Analytics middleware
+const { trackView, cleanSessions } = require('./middleware/analytics');
+app.use(trackView);
+// Clean stale sessions every 2 minutes
+setInterval(cleanSessions, 2 * 60 * 1000);
+
 // Static files
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

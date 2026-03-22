@@ -297,6 +297,21 @@ canvas{max-height:220px;}
       <div class="stat-card"><div class="stat-val" id="stat-messages">—</div><div class="stat-label">Messages Sent</div><div class="stat-delta up" id="stat-msg-delta"></div></div>
       <div class="stat-card"><div class="stat-val" id="stat-pending" style="color:var(--warning)">—</div><div class="stat-label">Pending Review</div><div class="stat-delta" id="stat-pending-delta"></div></div>
     </div>
+    <!-- Visitor Analytics Row -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+      <div class="stat-card" style="border-left:3px solid var(--info);">
+        <div class="stat-val" id="stat-views" style="color:var(--info)">—</div>
+        <div class="stat-label">Page Views (24h)</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid var(--success);">
+        <div class="stat-val" id="stat-unique" style="color:var(--success)">—</div>
+        <div class="stat-label">Unique Visitors (24h)</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid var(--warning);">
+        <div class="stat-val" id="stat-online" style="color:var(--warning)">—</div>
+        <div class="stat-label">Online Right Now</div>
+      </div>
+    </div>
     <div class="charts-grid">
       <div class="chart-card"><div class="chart-title">User Signups (30 days)</div><canvas id="userGrowthChart"></canvas></div>
       <div class="chart-card"><div class="chart-title">Post Activity (30 days)</div><canvas id="postActivityChart"></canvas></div>
@@ -599,6 +614,12 @@ async function loadDashboardData() {
     document.getElementById('stat-msg-delta').textContent = `+${d.messages.today} today`;
     document.getElementById('stat-pending').textContent = d.pending_posts;
     document.getElementById('stat-pending-delta').textContent = d.pending_posts + ' need review';
+    // Visitor analytics
+    if (d.analytics) {
+      document.getElementById('stat-views').textContent = fmtNum(d.analytics.views_24h);
+      document.getElementById('stat-unique').textContent = fmtNum(d.analytics.unique_visitors_24h);
+      document.getElementById('stat-online').textContent = d.analytics.online_now;
+    }
 
     if (d.pending_posts > 0) { document.getElementById('pendingBadge').textContent = d.pending_posts; document.getElementById('pendingBadge').style.display = 'flex'; }
     if (d.moderated_users > 0) { document.getElementById('usersBadge').textContent = d.moderated_users; document.getElementById('usersBadge').style.display = 'flex'; }
